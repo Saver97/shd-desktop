@@ -1,55 +1,57 @@
 # SHD Desktop
 
-独立 Windows 桌面助手原型。产品方向见 [产品设计.md](docs/产品设计.md)。旧 SAO Utils 扩展位于旁边的 `shd-terminal`，本程序运行时不依赖它。
+适用于 Windows 10/11 x64 的桌面整理与日常助手。它把桌面图标放进可折叠的分框，并将日程、便签、天气、音乐和 ISAC 对话放在同一套桌面界面中。
 
-当前封版：[**1.0.2 单文件版**](https://github.com/Saver97/shd-desktop/releases/tag/v1.0.2)。本地封版归档位于 `release/sealed/1.0.2`，基准记录见 [docs/design/封版基准.md](docs/design/封版基准.md)。旧封版保留在原目录。
+## 下载与启动
 
-## 项目结构
+从 [最新 Release](https://github.com/Saver97/shd-desktop/releases/latest) 下载 `SHDDesktop-1.0.2.exe`，放在固定目录后双击运行。单文件版无需安装 Python；首次启动会在当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime` 缓存运行组件。
 
-| 目录 | 职责 |
+升级时先从托盘选择“退出 SHD Desktop”，再启动新版本，让已整理的桌面图标正常恢复。桌面空白处右键可打开程序或新建便签；Windows 11 可能需要先点“显示更多选项”。
+
+## 功能
+
+| 模块 | 可以做什么 |
 | --- | --- |
-| `app.py` | 程序入口和桌面面板控制器 |
-| `shd_desktop/desktop` | 图标分框、整理、场景及屏幕恢复 |
-| `shd_desktop/integration` | Windows 右键菜单、开机启动、热键及单实例通道 |
-| `shd_desktop/ai` | ISAC 对话、模型配置和工具调用 |
-| `shd_desktop/music`、`shd_desktop/notes` | 音乐播放器与便签 |
-| `shd_desktop/ui`、`shd_desktop/data` | 控制台和外观组件、日程与天气数据 |
-| `tests`、`tools`、`packaging`、`docs` | 回归检查、辅助脚本、打包与设计文档 |
+| 桌面分框 | 新建多个分框，拖动、缩放、折叠和吸附；按文件类型一键整理，保存并切换场景，撤销整理操作 |
+| 日程与便签 | 创建提醒、批量管理日程；便签支持颜色、透明度、置顶、锁定、提醒、分组和回收区 |
+| ISAC | 在独立窗口对话；保存多个 API 配置与模型，支持 Chat Completions / Responses，并可调用日程、便签、天气、分框和音乐功能 |
+| 天气 | 保存多个地区并切换，查看天气图标与未来四天预报 |
+| QQ 音乐 | 搜索歌曲和歌单、扫码登录、播放与续播；可用内容受账号和版权权限限制 |
+| Windows 集成 | 托盘、桌面右键快捷入口、可选开机启动、全局快捷查找和单实例运行 |
 
-模块依赖与运行入口详见 [架构说明](docs/ARCHITECTURE.md)。
+### 桌面整理的两种分框
 
-## 当前可用
+- **桌面整理分框**只管理图标的显示与位置，不移动桌面文件。隐藏分框或正常退出程序后，图标会回到 Windows 桌面。
+- **文件夹分框**关联实际目录；拖入文件会移动到该目录，同名目标会跳过，不覆盖。
+- 拖回桌面可取消图标分组；一键整理只处理尚未分组的桌面项目。若 Windows 开启“自动排列图标”，图标恢复后可能无法回到原先的精确坐标。
 
-- 无边框半透明文件夹面板；从系统桌面目录开始，可添加多个面板。
-- 可新建多个带名称与分类图标的分框，选择“桌面整理”时只管理桌面图标、不移动文件，选择“文件夹分框”时拖入的文件会移入对应目录。双击标题重命名，点击“折叠/展开”；拖动和缩放时会吸附邻近面板。
-- 浏览真实目录、双击打开、网格/列表切换、拖动位置与调整尺寸。
-- 从资源管理器拖入文件夹分框时会移动文件；同名目标会跳过，不覆盖。桌面整理分框的图标可以拖回 Windows 桌面以取消分组。
-- 控制台和托盘提供“撤销整理”；图标分组、移出、文件移动、解散分框及场景切换都可撤销。若文件原位置已被占用，撤销会停下并提示。
-- 控制台和托盘提供“一键按类型整理”，将尚未分组的桌面项目按文件夹、文档、图片、音乐、视频、压缩包、快捷方式和其他自动建立桌面整理分框。再次使用会复用已有类型分框，文件始终留在原目录，整批操作可撤销。
-- 若 Windows 桌面开启了“自动排列图标”，整理前会询问是否继续。确认后仍会分类，关闭软件时图标会重新显示，但无法保证回到此前的精确排列位置。
-- 场景保存面板与桌面卡的位置、尺寸、折叠和显示状态；在控制台或托盘切换。隐藏桌面整理分框时，图标会回到桌面，重新显示时再纳入分框。
-- 分框缩放时图标会随列数变化自动重排；大量文件变化会合并刷新，整理图标时整批保存恢复记录。
-- 布局和最近 20 步整理记录保存在 `%LOCALAPPDATA%\SHDDesktop\layout.json`。异常退出后再次启动会先恢复桌面图标，再应用当前场景；程序无法启动时可运行 `release\恢复桌面图标.cmd`。
-- 每次保存布局会同步维护 `layout.backup.json`；主布局损坏时从备份恢复，两份都损坏时停止启动并保留原文件。若退出时 Explorer 暂时不可用，恢复标记会保留至下次启动重试。
-- 显示器断开或缩放变化时，屏幕外的分框与状态卡会暂移到可见区域；原场景坐标不会因此被覆盖。重新连接显示器后会尝试回到原位。Explorer 桌面视图重建后会重新同步图标与分框层级。
-- 系统托盘可再次显示面板、添加面板和退出。
-- 打包版会为当前 Windows 用户加入“打开 SHD Desktop”和“新建 SHD 便签”桌面空白处右键入口；托盘“桌面右键快捷入口”可关闭或重新启用。单个 `SHDDesktop.exe` 会先向现有进程发送指令，避免每次新建便签都重新解包主程序。Windows 11 默认可能需要先点“显示更多选项”。
-- 三张可拖动的桌面状态卡显示近日事项、所选地区天气和当前歌曲，并可打开对应页面；位置和尺寸一并保存。
-- 托盘中的控制台可创建、完成、删除和稍后提醒日程；日程页的“多选”模式支持全选、清空选择和批量删除。日程保存在同目录的 `state.db`，到点通过托盘通知。
-- 控制台“桌面”菜单和托盘可新建、管理便签。每张便签可拖动、缩放、收起、隐藏、置顶、锁定，设置颜色、透明度、尺寸、标题、收藏和分组；支持复制、导出文本和删除后从便签管理的回收区恢复。正文、位置与状态自动保存在 `%LOCALAPPDATA%\SHDDesktop\notes.json`。
-- 便签提醒复用日程系统，修改便签标题会同步提醒标题；ISAC 可按稳定 ID 查询、创建、更新或移入回收区。删除或更新前应先列出便签确认 ID。
-- 控制台可搜索并保存多个天气地区，在天气页或桌面天气卡切换；各地区最近一次成功的数据保存在本地供断网查看。
-- ISAC 是独立聊天窗口，可固定在桌面位置、再次点击解锁；悬浮入口、托盘和控制台都可打开。聊天记录按发言者分色，可中断当前回复。模型配置是独立窗口，支持多个配置档、每个配置多个模型、Chat Completions / Responses 模式、自动获取模型列表或手填模型名。聊天窗口按“配置 → 模型”选择。旧版配置和密钥会自动迁移。所有密钥使用 Windows DPAPI 保存。
-- ISAC 可通过受限工具创建/完成/删除日程、读取天气、显示文件夹面板及控制应用内音乐播放；删除提醒时先查询日程 ID。
-- QQ 音乐页支持应用内歌曲/歌单搜索、QQ 扫码登录、查看个人歌单与歌曲分页、播放/暂停和下一首。上次列表、队列、当前歌曲和播放位置会保存，重启后可点击播放重新取址并尝试续播。账号凭证使用 Windows DPAPI 保存。它依赖社区接口，实际服务可能限流，播放受账号、会员和版权限制。
-- 天气页与桌面卡显示天气图标；此前生成的 20 个 SHD 图标已用于分框分类、导航、日程状态和功能按钮。
-- 界面采用深色战术 HUD：统一的橙色强调、分段导航、分框角标与细网格；控制台标题加入新生成的透明扫描环纹样，原有 SHD 图标用于模块标题。
-- Windows 快捷方式 `.url` 会显示其声明的游戏图标；应用图标由 `assets/app-icon.svg` 生成，修改后运行 `python tools/make_icon.py` 可重建多尺寸 ICO 与托盘 PNG。
-- 控制台的“开机启动”开关写入当前用户的 Windows 启动项，默认关闭；升级到新 EXE 路径时会把已启用的旧版启动项改指向当前版本。
+## 数据与恢复
 
-## 运行
+布局、日程、便签、模型配置和音乐状态保存在当前用户的 `%LOCALAPPDATA%\SHDDesktop`，不会打入发布包。密钥和音乐登录凭据使用 Windows DPAPI 保存。程序会维护布局备份；异常退出后再次启动会尝试恢复桌面图标。
 
-下载 `SHDDesktop-1.0.2.exe` 后放到固定目录并运行即可；运行 ZIP 中同样只有一个程序 EXE，其他文件是说明和桌面图标恢复脚本。首次启动会把内含运行组件展开到当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime`；用户数据仍存放在 `%LOCALAPPDATA%\SHDDesktop`。发布说明见 [RELEASE_NOTES.md](RELEASE_NOTES.md)，第三方许可提示见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+若程序无法正常打开，可在 PowerShell 中运行：
+
+```powershell
+.\SHDDesktop-1.0.2.exe --restore-desktop-icons
+```
+
+运行 ZIP 另附 `恢复桌面图标.cmd`。详细改动见 [发布记录](RELEASE_NOTES.md)。
+
+## 源码结构
+
+| 路径 | 内容 |
+| --- | --- |
+| `app.py` | Python 入口与桌面面板控制器 |
+| `shd_desktop/desktop`、`shd_desktop/integration` | 图标整理、场景、Windows 右键、热键与启动集成 |
+| `shd_desktop/ai`、`shd_desktop/music`、`shd_desktop/notes` | ISAC、播放器与便签 |
+| `shd_desktop/ui`、`shd_desktop/data` | 控制台、外观、日程与天气 |
+| `assets`、`tests`、`tools`、`packaging`、`docs` | 资源、测试、辅助脚本、打包和文档 |
+
+更多说明见 [架构文档](docs/ARCHITECTURE.md) 和 [产品设计](docs/产品设计.md)。
+
+## 从源码运行
+
+在 Windows PowerShell 中执行：
 
 ```powershell
 git clone https://github.com/Saver97/shd-desktop.git
@@ -59,9 +61,13 @@ python -m venv .venv
 .\.venv\Scripts\python.exe app.py
 ```
 
-`python app.py --smoke` 会使用临时配置离屏绘制 `preview.png`，不触碰正式布局。离屏渲染的中文字体可能显示为方框；实际 Windows 界面需要单独验收。
+运行回归检查：
 
-在仓库根目录运行 `.\.venv\Scripts\python.exe tools\run_tests.py` 执行全部回归检查；单项可运行 `.\.venv\Scripts\python.exe -m tests.test_scenes_undo` 等。`.\.venv\Scripts\python.exe -m tools.benchmarks.bench_performance .url --motion` 可复测批量整理和窗口操作耗时。构建单文件 EXE 使用独立环境：
+```powershell
+.\.venv\Scripts\python.exe tools\run_tests.py
+```
+
+构建单文件 EXE：
 
 ```powershell
 python -m venv .venv-release
@@ -69,8 +75,8 @@ python -m venv .venv-release
 .\build.ps1
 ```
 
-构建脚本读取 `packaging/SHDDesktop.spec` 与 `packaging/SHDLauncher.cs`，输出位于 Git 忽略的 `release-candidate/1.0.2`。
+构建结果位于 `release-candidate/1.0.2`。当前发布包的详细文件和 SHA256 清单见 [Release](https://github.com/Saver97/shd-desktop/releases/tag/v1.0.2)。
 
-## 下一步
+## 使用说明
 
-仍需在真实双显示器热插拔与 Explorer 重启场景做人工验收；QQ 音乐播放受账号和版权权限影响。
+QQ 音乐接口依赖社区项目，登录、限流和播放权限由服务端决定。Windows 10 实机、显示器热插拔及 Explorer 重启后的行为仍需在试用设备上复核。第三方组件及用途限制见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。本仓库暂未为项目源码设置许可证。
