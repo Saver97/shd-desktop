@@ -35,7 +35,7 @@
 .\SHDDesktop-1.0.2.exe --restore-desktop-icons
 ```
 
-运行 ZIP 另附 `恢复桌面图标.cmd`。详细改动见 [发布记录](RELEASE_NOTES.md)。
+详细改动见 [发布记录](RELEASE_NOTES.md)。
 
 ## 源码结构
 
@@ -75,7 +75,7 @@ python -m venv .venv-release
 .\build.ps1
 ```
 
-构建结果位于 `release-candidate/1.0.2`。当前发布包的详细文件和 SHA256 清单见 [Release](https://github.com/Saver97/shd-desktop/releases/tag/v1.0.2)。
+构建结果位于 `release-candidate/1.0.2`。GitHub Release 的附件仅提供 EXE；当前版本的 SHA256 见 [封版基准](docs/design/封版基准.md)。
 
 ## 使用说明
 
