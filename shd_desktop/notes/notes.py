@@ -8,14 +8,16 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QDateTime, QPoint, QRect, Qt, QTimer
-from PySide6.QtGui import QColor, QKeySequence, QMouseEvent, QPainter, QShortcut
+from PySide6.QtCore import QDateTime, QEvent, QPoint, QRect, Qt, QTimer
+from PySide6.QtGui import QColor, QGuiApplication, QKeySequence, QMouseEvent, QPainter, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView, QDateTimeEdit, QDialog, QDialogButtonBox, QFormLayout,
     QFileDialog, QHBoxLayout, QInputDialog, QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QMenu, QMessageBox, QPlainTextEdit, QPushButton, QSizeGrip, QSystemTrayIcon,
+    QMenu, QMessageBox, QTextEdit, QPushButton, QSizeGrip, QSystemTrayIcon,
     QVBoxLayout, QWidget,
 )
+
+from shd_desktop.notes.editor_menu import NoteEditorMenu
 
 
 COLORS = {
@@ -68,13 +70,14 @@ class NoteStore:
     def create(self, *, source: dict | None = None, position: QPoint | None = None) -> dict:
         count = sum(not n.get("deleted") for n in self.notes)
         note = {
-            "id": uuid.uuid4().hex, "title": "新便签", "text": "", "color": DEFAULT_COLOR,
+            "id": uuid.uuid4().hex, "title": "新便签", "text": "", "html": "",
+            "color": DEFAULT_COLOR,
             "opacity": 96, "x": 130 + 32 * (count % 9), "y": 130 + 32 * (count % 9),
             "w": 330, "h": 260, "hidden": False, "topmost": False,
             "locked": False, "starred": False, "group": "未分类", "deleted": False,
         }
         if source:
-            for key in ("title", "text", "color", "opacity", "w", "h", "topmost", "group"):
+            for key in ("title", "text", "html", "color", "opacity", "w", "h", "topmost", "group"):
                 note[key] = source.get(key, note[key])
             note["x"] = int(source.get("x", note["x"])) + 28
             note["y"] = int(source.get("y", note["y"])) + 28
@@ -148,10 +151,13 @@ class NoteWindow(QWidget):
         self.hide_button.clicked.connect(self.hide_note)
         title_row.addWidget(self.hide_button)
         root.addLayout(title_row)
-        self.editor = QPlainTextEdit(self)
+        self.editor = QTextEdit(self)
         self.editor.setObjectName("NoteEditor")
         self.editor.setFrameStyle(0)
-        self.editor.setPlainText(str(note.get("text", "")))
+        if note.get("html"):
+            self.editor.setHtml(str(note["html"]))
+        else:
+            self.editor.setPlainText(str(note.get("text", "")))
         self.editor.textChanged.connect(self._save_timer.start)
         root.addWidget(self.editor, 1)
         footer = QHBoxLayout()
@@ -161,13 +167,19 @@ class NoteWindow(QWidget):
         self.grip = QSizeGrip(self)
         footer.addWidget(self.grip)
         root.addLayout(footer)
+        self.editor_menu = None
+        for widget in (self, self.header, self.menu_button, self.hide_button,
+                       self.editor, self.editor.viewport(), self.hint, self.grip):
+            widget.installEventFilter(self)
         self.shortcuts = []
         for sequence, callback in (("Alt+N", manager.new_note), ("F2", self.rename),
                                    ("Alt+A", lambda: manager.set_alarm(self.note)),
                                    ("Alt+D", lambda: manager.new_note(self.note)),
                                    ("Alt+T", lambda: self.set_topmost(not self.note.get("topmost"))),
                                    ("Alt+L", lambda: self.set_field("locked", not self.note.get("locked"))),
-                                   ("Alt+M", self.toggle_collapsed), ("Alt+Delete", lambda: manager.delete_note(self.note))):
+                                   ("Alt+M", self.toggle_collapsed),
+                                   ("Ctrl+Shift+V", self.paste_plain),
+                                   ("Alt+Delete", lambda: manager.delete_note(self.note))):
             shortcut = QShortcut(QKeySequence(sequence), self)
             shortcut.activated.connect(callback)
             self.shortcuts.append(shortcut)
@@ -180,6 +192,16 @@ class NoteWindow(QWidget):
         flags |= Qt.WindowStaysOnTopHint if self.note.get("topmost") else Qt.WindowStaysOnBottomHint
         self.setWindowFlags(flags)
         self.setAttribute(Qt.WA_TranslucentBackground)
+
+    def eventFilter(self, watched, event) -> bool:
+        if event.type() == QEvent.ContextMenu and watched in (
+                self, self.header, self.menu_button, self.hide_button,
+                self.editor, self.editor.viewport(), self.hint, self.grip):
+            if self.editor_menu is None:
+                self.editor_menu = NoteEditorMenu(self, self.editor)
+            self.editor_menu.open(event.globalPos(), locked=bool(self.note.get("locked")))
+            return True
+        return super().eventFilter(watched, event)
 
     def refresh(self) -> None:
         name = self.note.get("color", DEFAULT_COLOR)
@@ -198,7 +220,7 @@ class NoteWindow(QWidget):
             QWidget#ShdNote {{ color: {foreground}; }}
             QLabel#NoteHeader {{ color: {foreground}; font-size: 13px; font-weight: 600; }}
             QLabel#NoteHint {{ color: {foreground}; font-size: 10px; }}
-            QPlainTextEdit#NoteEditor {{ color: {foreground}; background: transparent;
+            QTextEdit#NoteEditor {{ color: {foreground}; background: transparent;
                 border: 0; font-size: 13px; selection-background-color: #F48A35;
                 selection-color: #171717; }}
             QPushButton#NoteMenuButton, QPushButton#NoteHideButton {{ color: {foreground};
@@ -234,8 +256,13 @@ class NoteWindow(QWidget):
 
     def save_text(self) -> None:
         self.note["text"] = self.editor.toPlainText()
+        self.note["html"] = self.editor.toHtml()
         self.manager.store.save()
         self.manager.refresh_list()
+
+    def paste_plain(self) -> None:
+        if not self.note.get("locked"):
+            self.editor.insertPlainText(QGuiApplication.clipboard().text())
 
     def hide_note(self) -> None:
         self._save_timer.stop()
@@ -666,6 +693,7 @@ class NotesManager(QWidget):
             note["group"] = group.strip()[:50] or "未分类"
         if text is not None:
             note["text"] = text
+            note.pop("html", None)
             window = self.windows.get(note_id)
             if window:
                 window._save_timer.stop()

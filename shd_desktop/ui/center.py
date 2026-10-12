@@ -608,7 +608,8 @@ class ControlCenter(QMainWindow):
                  llm: LlmClient, on_chat, on_profiles, on_collection, on_show_panels,
                  on_undo, on_auto_organize, on_new_scene, on_switch_scene,
                  on_save_scene, on_delete_scene, on_appearance=None, on_find=None,
-                 on_new_note=None, on_notes=None, notes_manager=None):
+                 on_new_note=None, on_notes=None, notes_manager=None,
+                 on_widget_visibility=None):
         super().__init__()
         self.store = store
         self.on_switch_scene = on_switch_scene
@@ -668,6 +669,19 @@ class ControlCenter(QMainWindow):
         settings_menu.addAction("模型配置", on_profiles)
         if on_appearance:
             settings_menu.addAction("外观与快捷键", on_appearance)
+        if on_widget_visibility:
+            components = settings_menu.addMenu("桌面组件")
+            def refresh_components():
+                components.clear()
+                for kind, label in (("schedule", "日程"), ("weather", "天气"),
+                                    ("music", "音乐")):
+                    action = components.addAction(label)
+                    action.setCheckable(True)
+                    config = store.data.get("widgets", {}).get(kind, {})
+                    action.setChecked(not config.get("hidden", False))
+                    action.triggered.connect(
+                        lambda checked=False, name=kind: on_widget_visibility(name, checked))
+            components.aboutToShow.connect(refresh_components)
         settings_menu.addSeparator()
         self.autostart = QCheckBox("开机启动")
         self.autostart.setChecked(startup_enabled())

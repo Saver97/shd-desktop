@@ -3,7 +3,7 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from PySide6.QtWidgets import QApplication, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QToolButton
 
 from app import ConfigStore, Controller, ICON_DIR
 from shd_desktop.ui.theme import STYLE
@@ -57,6 +57,31 @@ with TemporaryDirectory() as temp:
     assert len(controller.panels) == 1
     controller.show_all()
     assert not folder.config["hidden"] and folder.isVisible()
+    controller.set_widget_visible("weather", False)
+    assert controller.widgets["weather"].config["hidden"]
+    assert not controller.widgets["weather"].isVisible()
+    assert ConfigStore(Path(temp)).data["widgets"]["weather"]["hidden"]
+    controller.populate_tray_menu()
+    components = next(action.menu() for action in controller.tray_menu.actions()
+                      if action.text() == "桌面组件")
+    weather_action = next(action for action in components.actions() if action.text() == "天气")
+    assert not weather_action.isChecked()
+    weather_action.trigger()
+    assert controller.widgets["weather"].isVisible()
+    assert not controller.widgets["weather"].config["hidden"]
+    settings = next(button.menu() for button in controller.center.findChildren(QToolButton)
+                    if button.text() == "设置")
+    settings_components = next(action.menu() for action in settings.actions()
+                               if action.text() == "桌面组件")
+    settings_components.aboutToShow.emit()
+    settings_weather = next(action for action in settings_components.actions()
+                            if action.text() == "天气")
+    assert settings_weather.isChecked()
+    settings_weather.trigger()
+    assert controller.widgets["weather"].config["hidden"]
+    controller.show_all()
+    controller.widgets["weather"].open_feature()
+    assert controller.center.tabs.currentWidget() is controller.center.weather
     previous = folder.height()
     folder.toggle_collapsed()
     assert folder.config["collapsed"] and folder.height() == 55

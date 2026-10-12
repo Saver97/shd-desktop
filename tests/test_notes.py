@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from PySide6.QtCore import QTimer
-from PySide6.QtGui import QFont
+from PySide6.QtCore import QCoreApplication, QPoint, QTimer
+from PySide6.QtGui import QContextMenuEvent, QFont, QTextCursor
 from PySide6.QtWidgets import QApplication, QMenu, QMessageBox
 
 from app import ConfigStore, Controller
@@ -24,6 +24,29 @@ with TemporaryDirectory() as temp:
     window = controller.notes.windows[note["id"]]
     window.editor.setPlainText("记住这件事")
     window.save_text()
+    assert window.editor_menu is None  # Rich controls load only on first right click.
+    point = window.header.rect().center()
+    QCoreApplication.sendEvent(window.header, QContextMenuEvent(
+        QContextMenuEvent.Mouse, point, window.header.mapToGlobal(point)))
+    assert window.editor_menu is not None and window.editor_menu.menu.isVisible()
+    edit_menu = window.editor_menu
+    assert {"撤销", "剪切", "复制", "粘贴", "粘贴为纯文本", "全选", "查找与替换", "清除格式"} <= {
+        action.text().split("\t")[0] for action in edit_menu.menu.actions()}
+    edit_menu.menu.grab().save(str(Path(__file__).resolve().parent / "preview-note-editor-menu.png"))
+    edit_menu.menu.hide()
+    body_point = window.editor.viewport().rect().center()
+    QCoreApplication.sendEvent(window.editor.viewport(), QContextMenuEvent(
+        QContextMenuEvent.Mouse, body_point,
+        window.editor.viewport().mapToGlobal(body_point)))
+    assert edit_menu.menu.isVisible()
+    edit_menu.menu.hide()
+    cursor = window.editor.textCursor()
+    cursor.select(QTextCursor.Document)
+    window.editor.setTextCursor(cursor)
+    edit_menu.toggle_style("bold")
+    assert window.editor.textCursor().charFormat().fontWeight() >= QFont.Bold
+    window.save_text()
+    assert NoteStore(root / "config").get(note["id"])["html"]
     window.set_field("color", "薄荷")
     window.set_field("opacity", 75)
     window.set_field("group", "工作")
@@ -39,6 +62,9 @@ with TemporaryDirectory() as temp:
     menu.hide()
     window.set_field("locked", True)
     assert window.editor.isReadOnly()
+    edit_menu.open(window.mapToGlobal(QPoint(3, 3)), locked=True)
+    assert not edit_menu.bold.isEnabled() and not edit_menu.cut_action.isEnabled()
+    edit_menu.menu.hide()
     window.set_field("locked", False)
     window.toggle_collapsed()
     assert note["collapsed"] and window.height() == 44
@@ -67,6 +93,10 @@ with TemporaryDirectory() as temp:
     assert not note["hidden"] and window.isVisible()
     duplicate = controller.notes.new_note(note)
     assert duplicate["text"] == note["text"] and duplicate["id"] != note["id"]
+    assert duplicate["html"] == note["html"]
+    duplicate_cursor = controller.notes.windows[duplicate["id"]].editor.textCursor()
+    duplicate_cursor.setPosition(1)
+    assert duplicate_cursor.charFormat().fontWeight() >= QFont.Bold
     assert "event_id" not in duplicate
     original_question = QMessageBox.question
     QMessageBox.question = lambda *args, **kwargs: QMessageBox.Yes

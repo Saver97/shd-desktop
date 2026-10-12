@@ -918,8 +918,10 @@ class StatusPanel(QWidget):
             self.store.save()
 
     def open_feature(self) -> None:
-        self.controller.center.centralWidget().setCurrentIndex(
-            {"schedule": 0, "weather": 1, "music": 2}[self.kind])
+        pane = {"schedule": self.controller.center.schedule,
+                "weather": self.controller.center.weather,
+                "music": self.controller.center.music}[self.kind]
+        self.controller.center.centralWidget().setCurrentWidget(pane)
         self.controller.open_center()
 
     def refresh(self) -> None:
@@ -1065,7 +1067,8 @@ class Controller:
                                     self.create_scene, self.switch_scene,
                                     self.save_scene, self.delete_scene,
                                     self.open_appearance, self.open_search,
-                                    self.notes.new_note, self.notes.show_manager, self.notes)
+                                    self.notes.new_note, self.notes.show_manager, self.notes,
+                                    self.set_widget_visible)
         self.notes.present_in_center = self.center.show_notes
         self.search_window = QuickFind(self)
         self.search_hotkey = SearchHotkey(app, self.open_search)
@@ -1383,6 +1386,14 @@ class Controller:
         self.store.data["desktop_menu_enabled"] = enabled
         self.store.save()
 
+    def set_widget_visible(self, kind: str, visible: bool) -> None:
+        widget = self.widgets[kind]
+        widget.config["hidden"] = not visible
+        widget.setVisible(visible)
+        self.store.save()
+        if visible:
+            self.restack_panels()
+
     def populate_tray_menu(self) -> None:
         menu = self.tray_menu
         menu.clear()
@@ -1407,6 +1418,14 @@ class Controller:
         scenes.addAction("保存当前场景", self.save_scene)
         scenes.addAction("新建场景", self.create_scene)
         menu.addAction("显示全部面板", self.show_all)
+        components = menu.addMenu("桌面组件")
+        for kind, label in (("schedule", "日程"), ("weather", "天气"),
+                            ("music", "音乐")):
+            action = components.addAction(label)
+            action.setCheckable(True)
+            action.setChecked(not self.widgets[kind].config.get("hidden", False))
+            action.triggered.connect(
+                lambda checked=False, name=kind: self.set_widget_visible(name, checked))
         menu.addAction("一键按类型整理", self.auto_organize)
         menu.addAction(themed_icon("fn-widgets-gen-64.png"), "新建分类分框", self.add_collection)
         menu.addAction("添加已有文件夹", self.prompt_folder)
@@ -1782,7 +1801,7 @@ def main() -> int:
     args = parser.parse_args()
     app = QApplication(sys.argv)
     app.setApplicationName("SHD Desktop")
-    app.setApplicationVersion("1.0.2")
+    app.setApplicationVersion("1.0.3")
     app.setWindowIcon(QIcon(str(ICON)))
     app.setFont(QFont("Microsoft YaHei UI", 10))
     app.setStyleSheet(STYLE)
