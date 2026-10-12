@@ -6,18 +6,14 @@ import sys
 import winreg
 from pathlib import Path
 
-from startup import startup_command
+from startup import public_executable, startup_command
 
 
 MENU_KEY = r"Software\Classes\DesktopBackground\Shell\SHDDesktop"
 
 
 def quick_command(action: str) -> str:
-    """Use the small shell launcher when the packaged app is already running."""
-    if getattr(sys, "frozen", False):
-        launcher = Path(sys.executable).resolve().with_name("SHDQuick.exe")
-        if launcher.is_file():
-            return f'"{launcher}" {action}'
+    """The public EXE forwards to an existing process before extracting Qt."""
     return f"{startup_command()} --{'new-note' if action == 'note' else 'show-center'}"
 
 
@@ -47,7 +43,7 @@ def is_enabled() -> bool:
 
 def set_enabled(enabled: bool) -> None:
     if enabled:
-        icon = (f'"{Path(sys.executable).resolve()}"' if getattr(sys, "frozen", False)
+        icon = (f'"{public_executable()}"' if getattr(sys, "frozen", False)
                 else str(Path(__file__).resolve().parent / "assets" / "app.ico"))
         with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, MENU_KEY, 0,
                                 winreg.KEY_SET_VALUE) as key:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 import winreg
 from pathlib import Path
@@ -11,8 +12,19 @@ RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 VALUE_NAME = "SHDDesktop"
 
 
+def public_executable() -> Path:
+    """Return the distributable launcher when running from its cached core."""
+    if getattr(sys, "frozen", False):
+        supplied = os.getenv("SHD_PUBLIC_EXE")
+        if supplied:
+            launcher = Path(supplied).resolve()
+            if launcher.name.casefold() == "shddesktop.exe" and launcher.is_file():
+                return launcher
+    return Path(sys.executable).resolve()
+
+
 def startup_command() -> str:
-    executable = Path(sys.executable).resolve()
+    executable = public_executable()
     if getattr(sys, "frozen", False):
         return f'"{executable}"'
     pythonw = executable.with_name("pythonw.exe")

@@ -2,6 +2,7 @@
 
 import uuid
 import winreg
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -34,22 +35,35 @@ finally:
     desktop_menu.set_enabled(False)
 
 with TemporaryDirectory() as temp:
-    executable = Path(temp) / "SHDDesktop.exe"
-    launcher = executable.with_name("SHDQuick.exe")
+    executable = Path(temp) / "Runtime" / "SHDDesktopCore.exe"
+    executable.parent.mkdir()
+    launcher = Path(temp) / "SHDDesktop.exe"
+    launcher.touch()
     original_executable = desktop_menu.sys.executable
     original_frozen = getattr(desktop_menu.sys, "frozen", None)
+    original_public = os.environ.get("SHD_PUBLIC_EXE")
     try:
         desktop_menu.sys.executable = str(executable)
         desktop_menu.sys.frozen = True
         assert desktop_menu.note_menu_command() == f'"{executable}" --new-note'
-        launcher.touch()
-        assert desktop_menu.note_menu_command() == f'"{launcher}" note'
-        assert desktop_menu.menu_command() == f'"{launcher}" center'
+        os.environ["SHD_PUBLIC_EXE"] = str(launcher)
+        assert desktop_menu.note_menu_command() == f'"{launcher}" --new-note'
+        assert desktop_menu.menu_command() == f'"{launcher}" --show-center'
+        desktop_menu.set_enabled(True)
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_menu.MENU_KEY) as key:
+            assert winreg.QueryValueEx(key, "Icon")[0] == f'"{launcher}"'
+        assert desktop_menu.is_enabled()
+        desktop_menu.set_enabled(False)
     finally:
         desktop_menu.sys.executable = original_executable
+        if original_public is None:
+            os.environ.pop("SHD_PUBLIC_EXE", None)
+        else:
+            os.environ["SHD_PUBLIC_EXE"] = original_public
         if original_frozen is None:
             del desktop_menu.sys.frozen
         else:
             desktop_menu.sys.frozen = original_frozen
+        desktop_menu.set_enabled(False)
 
 print("desktop context menu registration passed")

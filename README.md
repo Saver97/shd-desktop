@@ -2,7 +2,7 @@
 
 独立 Windows 桌面助手原型。产品方向见 [产品设计.md](产品设计.md)。旧 SAO Utils 扩展位于旁边的 `shd-terminal`，本程序运行时不依赖它。
 
-当前封版：**1.0 内网试用版**。封版包位于 `release/sealed/1.0`，基准记录见 [design/封版基准.md](design/封版基准.md)。旧封版保留在原目录。
+当前封版：**1.0.1 单文件版**。封版包位于 `release/sealed/1.0.1`，基准记录见 [design/封版基准.md](design/封版基准.md)。旧封版保留在原目录。
 
 ## 当前可用
 
@@ -19,7 +19,7 @@
 - 每次保存布局会同步维护 `layout.backup.json`；主布局损坏时从备份恢复，两份都损坏时停止启动并保留原文件。若退出时 Explorer 暂时不可用，恢复标记会保留至下次启动重试。
 - 显示器断开或缩放变化时，屏幕外的分框与状态卡会暂移到可见区域；原场景坐标不会因此被覆盖。重新连接显示器后会尝试回到原位。Explorer 桌面视图重建后会重新同步图标与分框层级。
 - 系统托盘可再次显示面板、添加面板和退出。
-- 打包版会为当前 Windows 用户加入“打开 SHD Desktop”和“新建 SHD 便签”桌面空白处右键入口；托盘“桌面右键快捷入口”可关闭或重新启用。程序已运行时，同目录的 `SHDQuick.exe` 直接向现有进程发送指令，避免每次新建便签都重新解包主程序。Windows 11 默认可能需要先点“显示更多选项”。
+- 打包版会为当前 Windows 用户加入“打开 SHD Desktop”和“新建 SHD 便签”桌面空白处右键入口；托盘“桌面右键快捷入口”可关闭或重新启用。单个 `SHDDesktop.exe` 会先向现有进程发送指令，避免每次新建便签都重新解包主程序。Windows 11 默认可能需要先点“显示更多选项”。
 - 三张可拖动的桌面状态卡显示近日事项、所选地区天气和当前歌曲，并可打开对应页面；位置和尺寸一并保存。
 - 托盘中的控制台可创建、完成、删除和稍后提醒日程；日程页的“多选”模式支持全选、清空选择和批量删除。日程保存在同目录的 `state.db`，到点通过托盘通知。
 - 控制台“桌面”菜单和托盘可新建、管理便签。每张便签可拖动、缩放、收起、隐藏、置顶、锁定，设置颜色、透明度、尺寸、标题、收藏和分组；支持复制、导出文本和删除后从便签管理的回收区恢复。正文、位置与状态自动保存在 `%LOCALAPPDATA%\SHDDesktop\notes.json`。
@@ -35,7 +35,7 @@
 
 ## 运行
 
-下载已打包版本后，将 ZIP 解压到固定目录，保持 `SHDDesktop.exe`、`SHDQuick.exe` 在同一目录，运行 `SHDDesktop.exe`。发布说明见 [RELEASE_NOTES.md](RELEASE_NOTES.md)，第三方许可提示见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+下载 `SHDDesktop-1.0.1.exe` 后放到固定目录并运行即可；运行 ZIP 中同样只有一个程序 EXE，其他文件是说明和桌面图标恢复脚本。首次启动会把内含运行组件展开到当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime`；用户数据仍存放在 `%LOCALAPPDATA%\SHDDesktop`。发布说明见 [RELEASE_NOTES.md](RELEASE_NOTES.md)，第三方许可提示见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ```powershell
 cd F:\desktop\shd-desktop

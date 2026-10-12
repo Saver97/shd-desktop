@@ -1,6 +1,6 @@
 # 第三方组件与内网试用提示
 
-本项目 1.0 运行包包含下列主要第三方组件，具体锁定版本见封版目录的 `requirements-lock-1.0.txt`。此文件记录发布前需要核对的事项，不代替公司的许可审查。
+本项目 1.0.1 运行包包含下列主要第三方组件，具体锁定版本见封版目录的 `requirements-lock-1.0.1.txt`。此文件记录发布前需要核对的事项，不代替公司的许可审查。
 
 - **PySide6 / Qt for Python 6.11.2**：本次通过 PyPI 社区版构建。其许可选项包括 LGPLv3/GPLv3 和商业许可。公司应按实际使用与分发方式确认合规路径、相关许可文本和组件替换要求。官方资料：<https://doc.qt.io/qtforpython-6.11/commercial/index.html>。
 - **QQMusicApi (`qqmusic-api-python`) 0.7.3**：仓库在 v0.7.3 标注 GPLv3 或更高版本，同时在 README 写有“请勿将其用于任何商业用途”。两处表述的关系需要公司确认；本内网试用版仅供公司内部员工试用，不应直接提供给客户或外部合作方。上游源码及说明：<https://github.com/l-1124/QQMusicApi/tree/v0.7.3>、<https://github.com/l-1124/QQMusicApi/blob/v0.7.3/README.md>。
