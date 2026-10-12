@@ -16,4 +16,4 @@
 
 从仓库根目录运行 `python app.py`。使用 `python tools/run_tests.py` 执行全部回归脚本；也可用 `python -m tests.test_notes` 单独执行。测试用临时目录保存用户数据，截图生成在 `tests/` 并由 Git 忽略。`build.ps1` 构建单文件 EXE；其输出目录由 Git 忽略。
 
-发布标签 `v1.0.1` 保留封版当时的源码与附件；模块目录结构从 1.0.2 起使用。
+公开发布仅保留 `v1.0.4` 标签和单文件 EXE；此前的开发过程仍可从 Git 提交历史追溯。
