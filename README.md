@@ -1,8 +1,22 @@
 # SHD Desktop
 
-独立 Windows 桌面助手原型。产品方向见 [产品设计.md](产品设计.md)。旧 SAO Utils 扩展位于旁边的 `shd-terminal`，本程序运行时不依赖它。
+独立 Windows 桌面助手原型。产品方向见 [产品设计.md](docs/产品设计.md)。旧 SAO Utils 扩展位于旁边的 `shd-terminal`，本程序运行时不依赖它。
 
-当前封版：**1.0.1 单文件版**。封版包位于 `release/sealed/1.0.1`，基准记录见 [design/封版基准.md](design/封版基准.md)。旧封版保留在原目录。
+当前封版：[**1.0.2 单文件版**](https://github.com/Saver97/shd-desktop/releases/tag/v1.0.2)。本地封版归档位于 `release/sealed/1.0.2`，基准记录见 [docs/design/封版基准.md](docs/design/封版基准.md)。旧封版保留在原目录。
+
+## 项目结构
+
+| 目录 | 职责 |
+| --- | --- |
+| `app.py` | 程序入口和桌面面板控制器 |
+| `shd_desktop/desktop` | 图标分框、整理、场景及屏幕恢复 |
+| `shd_desktop/integration` | Windows 右键菜单、开机启动、热键及单实例通道 |
+| `shd_desktop/ai` | ISAC 对话、模型配置和工具调用 |
+| `shd_desktop/music`、`shd_desktop/notes` | 音乐播放器与便签 |
+| `shd_desktop/ui`、`shd_desktop/data` | 控制台和外观组件、日程与天气数据 |
+| `tests`、`tools`、`packaging`、`docs` | 回归检查、辅助脚本、打包与设计文档 |
+
+模块依赖与运行入口详见 [架构说明](docs/ARCHITECTURE.md)。
 
 ## 当前可用
 
@@ -30,23 +44,32 @@
 - QQ 音乐页支持应用内歌曲/歌单搜索、QQ 扫码登录、查看个人歌单与歌曲分页、播放/暂停和下一首。上次列表、队列、当前歌曲和播放位置会保存，重启后可点击播放重新取址并尝试续播。账号凭证使用 Windows DPAPI 保存。它依赖社区接口，实际服务可能限流，播放受账号、会员和版权限制。
 - 天气页与桌面卡显示天气图标；此前生成的 20 个 SHD 图标已用于分框分类、导航、日程状态和功能按钮。
 - 界面采用深色战术 HUD：统一的橙色强调、分段导航、分框角标与细网格；控制台标题加入新生成的透明扫描环纹样，原有 SHD 图标用于模块标题。
-- Windows 快捷方式 `.url` 会显示其声明的游戏图标；应用图标由 `assets/app-icon.svg` 生成，修改后运行 `python make_icon.py` 可重建多尺寸 ICO 与托盘 PNG。
+- Windows 快捷方式 `.url` 会显示其声明的游戏图标；应用图标由 `assets/app-icon.svg` 生成，修改后运行 `python tools/make_icon.py` 可重建多尺寸 ICO 与托盘 PNG。
 - 控制台的“开机启动”开关写入当前用户的 Windows 启动项，默认关闭；升级到新 EXE 路径时会把已启用的旧版启动项改指向当前版本。
 
 ## 运行
 
-下载 `SHDDesktop-1.0.1.exe` 后放到固定目录并运行即可；运行 ZIP 中同样只有一个程序 EXE，其他文件是说明和桌面图标恢复脚本。首次启动会把内含运行组件展开到当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime`；用户数据仍存放在 `%LOCALAPPDATA%\SHDDesktop`。发布说明见 [RELEASE_NOTES.md](RELEASE_NOTES.md)，第三方许可提示见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+下载 `SHDDesktop-1.0.2.exe` 后放到固定目录并运行即可；运行 ZIP 中同样只有一个程序 EXE，其他文件是说明和桌面图标恢复脚本。首次启动会把内含运行组件展开到当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime`；用户数据仍存放在 `%LOCALAPPDATA%\SHDDesktop`。发布说明见 [RELEASE_NOTES.md](RELEASE_NOTES.md)，第三方许可提示见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ```powershell
-cd F:\desktop\shd-desktop
+git clone https://github.com/Saver97/shd-desktop.git
+cd shd-desktop
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe app.py
 ```
 
-当前机器的 `.venv-release` 已装好依赖，可运行 `.\.venv-release\Scripts\python.exe app.py`。`python app.py --smoke` 会使用临时配置离屏绘制 `preview.png`，不触碰正式布局。离屏渲染的中文字体可能显示为方框；实际 Windows 界面需要单独验收。
+`python app.py --smoke` 会使用临时配置离屏绘制 `preview.png`，不触碰正式布局。离屏渲染的中文字体可能显示为方框；实际 Windows 界面需要单独验收。
 
-可运行 `python test_scenes_undo.py`、`python test_auto_organize.py`、`python test_batch_grouping.py`、`python test_resize_reflow.py`、`python test_desktop_menu.py`、`python test_instance.py` 检查场景、撤销、一键整理、缩放重排和右键入口；`python bench_performance.py .url --motion` 可复测批量整理和窗口操作耗时。
+在仓库根目录运行 `.\.venv\Scripts\python.exe tools\run_tests.py` 执行全部回归检查；单项可运行 `.\.venv\Scripts\python.exe -m tests.test_scenes_undo` 等。`.\.venv\Scripts\python.exe -m tools.benchmarks.bench_performance .url --motion` 可复测批量整理和窗口操作耗时。构建单文件 EXE 使用独立环境：
+
+```powershell
+python -m venv .venv-release
+.\.venv-release\Scripts\python.exe -m pip install -r requirements-build.txt
+.\build.ps1
+```
+
+构建脚本读取 `packaging/SHDDesktop.spec` 与 `packaging/SHDLauncher.cs`，输出位于 Git 忽略的 `release-candidate/1.0.2`。
 
 ## 下一步
 

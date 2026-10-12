@@ -16,7 +16,7 @@ import uuid
 from pathlib import Path
 from datetime import datetime
 
-from music_network import bypass_music_proxy
+from shd_desktop.music.music_network import bypass_music_proxy
 
 # FFmpeg's Windows C runtime snapshots the environment when its DLL loads.
 # Install music-only bypass rules before any multimedia backend is imported.
@@ -46,25 +46,25 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from center import ControlCenter
-from desktop_menu import is_enabled as desktop_menu_enabled, set_enabled as set_desktop_menu_enabled
-from desktop_groups import DesktopGroups, path_key
-from desktop_groups import HIDE_BITS, file_attributes
-from auto_organize import TYPES, classify, icon_for_type
-from isac_ui import ChatWindow, LlmSettingsWindow
-from instance import claim_or_forward, receive_requests
-from llm import LlmClient, ToolDispatcher
-from services import ScheduleStore, WeatherClient
-from weather_art import weather_pixmap
-from theme import STYLE, apply_hud, current_hud, hud_background, scaled_style, normalize_hud
-from appearance import AppearanceDialog
-from quick_find import QuickFind
-from search_hotkey import SearchHotkey, DEFAULT_SHORTCUT
-from panel_layout import snap_position, snap_size
-from screen_recovery import visible_geometry
-from scenes import SceneStore
-from notes import NotesManager
-from startup import migrate_enabled as migrate_startup_enabled
+from shd_desktop.ui.center import ControlCenter
+from shd_desktop.integration.desktop_menu import is_enabled as desktop_menu_enabled, set_enabled as set_desktop_menu_enabled
+from shd_desktop.desktop.desktop_groups import DesktopGroups, path_key
+from shd_desktop.desktop.desktop_groups import HIDE_BITS, file_attributes
+from shd_desktop.desktop.auto_organize import TYPES, classify, icon_for_type
+from shd_desktop.ai.isac_ui import ChatWindow, LlmSettingsWindow
+from shd_desktop.integration.instance import claim_or_forward, receive_requests
+from shd_desktop.ai.llm import LlmClient, ToolDispatcher
+from shd_desktop.data.services import ScheduleStore, WeatherClient
+from shd_desktop.ui.weather_art import weather_pixmap
+from shd_desktop.ui.theme import STYLE, apply_hud, current_hud, hud_background, scaled_style, normalize_hud
+from shd_desktop.ui.appearance import AppearanceDialog
+from shd_desktop.ui.quick_find import QuickFind
+from shd_desktop.integration.search_hotkey import SearchHotkey, DEFAULT_SHORTCUT
+from shd_desktop.desktop.panel_layout import snap_position, snap_size
+from shd_desktop.desktop.screen_recovery import visible_geometry
+from shd_desktop.desktop.scenes import SceneStore
+from shd_desktop.notes.notes import NotesManager
+from shd_desktop.integration.startup import migrate_enabled as migrate_startup_enabled
 
 
 def pointer_on_windows_desktop() -> bool:
@@ -1782,7 +1782,7 @@ def main() -> int:
     args = parser.parse_args()
     app = QApplication(sys.argv)
     app.setApplicationName("SHD Desktop")
-    app.setApplicationVersion("1.0.1")
+    app.setApplicationVersion("1.0.2")
     app.setWindowIcon(QIcon(str(ICON)))
     app.setFont(QFont("Microsoft YaHei UI", 10))
     app.setStyleSheet(STYLE)

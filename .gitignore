@@ -8,3 +8,5 @@ build-release/
 dist/
 dist-clean/
 release/
+release-candidate/
+build-single/
