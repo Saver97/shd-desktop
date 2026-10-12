@@ -1,0 +1,10 @@
+.venv/
+.venv-release/
+__pycache__/
+preview*.png
+build/
+build-clean/
+build-release/
+dist/
+dist-clean/
+release/
