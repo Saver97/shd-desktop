@@ -4,7 +4,7 @@
 
 ## 下载与启动
 
-从 [最新 Release](https://github.com/Saver97/shd-desktop/releases/latest) 下载 `SHDDesktop-1.0.3.exe`，放在固定目录后双击运行。单文件版无需安装 Python；首次启动会在当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime` 缓存运行组件。
+从 [最新 Release](https://github.com/Saver97/shd-desktop/releases/latest) 下载 `SHDDesktop-1.0.4.exe`，放在固定目录后双击运行。单文件版无需安装 Python；首次启动会在当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime` 缓存运行组件。
 
 升级时先从托盘选择“退出 SHD Desktop”，再启动新版本，让已整理的桌面图标正常恢复。桌面空白处右键可打开程序或新建便签；Windows 11 可能需要先点“显示更多选项”。
 
@@ -12,7 +12,7 @@
 
 | 模块 | 可以做什么 |
 | --- | --- |
-| 桌面分框 | 新建多个分框，拖动、缩放、折叠和吸附；按文件类型一键整理，保存并切换场景，撤销整理操作 |
+| 桌面分框 | 新建多个分框，拖动、缩放、折叠和吸附；图标支持 Windows 文件右键菜单；按文件类型一键整理，保存并切换场景，撤销整理操作 |
 | 日程与便签 | 创建提醒、批量管理日程；便签支持富文本右键编辑、颜色、透明度、置顶、锁定、提醒、分组和回收区 |
 | ISAC | 在独立窗口对话；保存多个 API 配置与模型，支持 Chat Completions / Responses，并可调用日程、便签、天气、分框和音乐功能 |
 | 天气 | 保存多个地区并切换，查看天气图标与未来四天预报 |
@@ -32,7 +32,7 @@
 若程序无法正常打开，可在 PowerShell 中运行：
 
 ```powershell
-.\SHDDesktop-1.0.3.exe --restore-desktop-icons
+.\SHDDesktop-1.0.4.exe --restore-desktop-icons
 ```
 
 详细改动见 [发布记录](RELEASE_NOTES.md)。
@@ -75,7 +75,7 @@ python -m venv .venv-release
 .\build.ps1
 ```
 
-构建结果位于 `release-candidate/1.0.3`。GitHub Release 的附件仅提供 EXE；当前版本的 SHA256 见 [封版基准](docs/design/封版基准.md)。
+构建结果位于 `release-candidate/1.0.4`。GitHub Release 的附件仅提供 EXE；当前版本的 SHA256 见 [封版基准](docs/design/封版基准.md)。
 
 ## 使用说明
 

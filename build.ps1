@@ -6,7 +6,7 @@ $python = if ($env:SHD_BUILD_PYTHON) { $env:SHD_BUILD_PYTHON } else {
 if (-not (Test-Path -LiteralPath $python)) {
     throw '请先创建 .venv-release 并安装 requirements-build.txt'
 }
-$version = '1.0.3'
+$version = '1.0.4'
 $buildRoot = Join-Path $PSScriptRoot "build-single\$version"
 $innerDir = Join-Path $buildRoot 'inner'
 $innerExe = Join-Path $innerDir 'SHDDesktop.exe'

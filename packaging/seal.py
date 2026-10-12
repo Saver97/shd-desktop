@@ -1,4 +1,4 @@
-"""Seal the tested 1.0.3 single-EXE candidate without touching prior releases."""
+"""Seal the tested 1.0.4 single-EXE candidate without touching prior releases."""
 
 import hashlib
 import json
@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 CANDIDATE = ROOT / "release-candidate" / VERSION / "SHDDesktop.exe"
 SEALED = ROOT / "release" / "sealed" / VERSION
 RUNTIME = {
@@ -61,7 +61,7 @@ def main() -> None:
             raise SystemExit(f"Missing runtime file: {path}")
     results = json.loads((ROOT / "build-single" / VERSION / "test-results.json")
                          .read_text(encoding="utf-8-sig"))
-    assert len(results) == 30 and all(item["Code"] == 0 for item in results)
+    assert len(results) == 31 and all(item["Code"] == 0 for item in results)
     sources = source_files()
     assert len(sources) == len({path.relative_to(ROOT).as_posix() for path in sources})
     assert not any("references" in path.parts for path in sources)
@@ -94,8 +94,8 @@ def main() -> None:
 
 ## 验证范围
 
-- 30 项回归脚本通过；发布 EXE 的 `--help`、`--smoke` 退出码为 0。
-- 桌面图标恢复、便签富文本持久化和三个桌面组件开关由回归脚本覆盖；正式用户数据未参与封版检查。
+- 31 项回归脚本通过；发布 EXE 的 `--help`、`--smoke` 退出码为 0。
+- Windows 文件右键菜单、桌面图标恢复、便签编辑和三个桌面组件开关由回归脚本覆盖；正式用户数据未参与封版检查。
 - 运行 ZIP 与源码 ZIP 已逐条校验文件 SHA256；缓存的内层程序 SHA256 与构建产物一致。
 - 当前构建机为 Windows 11；Windows 10、双显示器热插拔、外部 LLM 和 QQ 音乐服务需要在试用设备上实测。
 - 用户数据、密钥和登录凭据未纳入任何封版包。EXE 未签名。

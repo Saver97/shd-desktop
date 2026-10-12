@@ -48,6 +48,7 @@ from PySide6.QtWidgets import (
 
 from shd_desktop.ui.center import ControlCenter
 from shd_desktop.integration.desktop_menu import is_enabled as desktop_menu_enabled, set_enabled as set_desktop_menu_enabled
+from shd_desktop.integration.shell_context_menu import show_file_menu
 from shd_desktop.desktop.desktop_groups import DesktopGroups, path_key
 from shd_desktop.desktop.desktop_groups import HIDE_BITS, file_attributes
 from shd_desktop.desktop.auto_organize import TYPES, classify, icon_for_type
@@ -427,9 +428,8 @@ class FolderPanel(QWidget):
                                   lambda: self.on_remove(self.config["id"]))
 
         self.list = FolderList(self)
-        if self.is_virtual:
-            self.list.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.list.customContextMenuRequested.connect(self.item_menu)
+        self.list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.list.customContextMenuRequested.connect(self.item_menu)
         self.list.itemDoubleClicked.connect(self.open_item)
         root.addWidget(self.list, 1)
 
@@ -684,7 +684,8 @@ class FolderPanel(QWidget):
                 if str(path) in selected_paths:
                     item.setSelected(True)
             self._icon_cache = {key: value for key, value in self._icon_cache.items() if key in shown}
-            action_hint = "双击打开 · 右键移出" if self.is_virtual else "双击打开 · 拖放整理"
+            action_hint = ("双击打开 · 右键系统菜单 / 移出"
+                           if self.is_virtual else "双击打开 · 右键系统菜单 · 拖放整理")
             mode = "桌面整理" if self.is_virtual else "文件夹分框"
             self.count_label.setText(f"{mode}  /  {action_hint}")
         finally:
@@ -723,21 +724,36 @@ class FolderPanel(QWidget):
 
     def item_menu(self, position: QPoint) -> None:
         item = self.list.itemAt(position)
-        if not item or not self.is_virtual:
+        if not item:
             return
-        menu = QMenu(self)
-        restore = menu.addAction("移出分框，恢复桌面图标")
-        if menu.exec(self.list.mapToGlobal(position)) == restore:
+        if not item.isSelected():
+            self.list.clearSelection()
+            item.setSelected(True)
+        selected = [Path(entry.data(Qt.UserRole)) for entry in self.list.selectedItems()]
+        path = Path(item.data(Qt.UserRole))
+        if len({os.path.normcase(os.path.abspath(str(entry.parent))) for entry in selected}) > 1:
+            selected = [path]
+        point = self.list.mapToGlobal(position)
+        try:
+            restore = show_file_menu(selected, int(self.winId()), point.x(), point.y(),
+                                     allow_restore=self.is_virtual)
+        except Exception as exc:
+            QMessageBox.warning(self, "Windows 右键菜单", str(exc))
+            return
+        if restore:
             try:
-                path = Path(item.data(Qt.UserRole))
-                self.groups.remove(self.config, path)
+                for entry in selected:
+                    self.groups.remove(self.config, entry)
                 if self.history_callback:
-                    self.history_callback({"kind": "group", "items": [{"path": str(path), "owner": self.config["id"]}]})
+                    self.history_callback({"kind": "group", "items": [
+                        {"path": str(entry), "owner": self.config["id"]} for entry in selected]})
             except OSError as exc:
                 QMessageBox.warning(self, "无法恢复图标", str(exc))
                 return
             if self.group_changed_callback:
                 self.group_changed_callback()
+        elif restore is False:
+            self._refresh_timer.start()
 
     def receive_drop(self, paths: list[Path], position: QPoint) -> bool:
         if self.is_virtual:
@@ -1801,7 +1817,7 @@ def main() -> int:
     args = parser.parse_args()
     app = QApplication(sys.argv)
     app.setApplicationName("SHD Desktop")
-    app.setApplicationVersion("1.0.3")
+    app.setApplicationVersion("1.0.4")
     app.setWindowIcon(QIcon(str(ICON)))
     app.setFont(QFont("Microsoft YaHei UI", 10))
     app.setStyleSheet(STYLE)

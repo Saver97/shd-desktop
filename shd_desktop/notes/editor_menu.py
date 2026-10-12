@@ -22,19 +22,26 @@ class NoteEditorMenu:
         self.menu = QMenu(parent)
         self.menu.setObjectName("NoteEditorContextMenu")
         self.menu.setStyleSheet("""
-            QMenu#NoteEditorContextMenu { background: #F7F7F5; color: #24282B;
-                border: 1px solid #B8BDC0; border-radius: 8px; padding: 5px; }
-            QMenu#NoteEditorContextMenu::item { padding: 6px 24px 6px 12px; }
-            QMenu#NoteEditorContextMenu::item:selected { background: #E4E8EA; }
-            QMenu#NoteEditorContextMenu::item:disabled { color: #9DA1A3; }
+            QMenu#NoteEditorContextMenu { background: #242A31; color: #F4F5F6;
+                border: 1px solid #697480; border-radius: 7px; padding: 6px; }
+            QMenu#NoteEditorContextMenu::item { background: transparent; color: #F4F5F6;
+                padding: 8px 24px 8px 12px; }
+            QMenu#NoteEditorContextMenu::item:selected { background: #495561;
+                color: #FFFFFF; }
+            QMenu#NoteEditorContextMenu::item:disabled { color: #A8B0B9; }
+            QMenu#NoteEditorContextMenu::separator { height: 1px;
+                background: #52606B; margin: 6px 10px; }
             QMenu#NoteEditorContextMenu QToolButton,
             QMenu#NoteEditorContextMenu QSpinBox,
-            QMenu#NoteEditorContextMenu QFontComboBox { background: #FFFFFF;
-                color: #24282B; border: 1px solid #D5D9DB; border-radius: 5px;
+            QMenu#NoteEditorContextMenu QFontComboBox { background: #303944;
+                color: #F4F5F6; border: 1px solid #697480; border-radius: 4px;
                 padding: 2px; min-height: 25px; }
-            QMenu#NoteEditorContextMenu QToolButton:checked { background: #FFDAB5;
-                border-color: #E98A35; }
-            QMenu#NoteEditorContextMenu QLabel { color: #44494C; }
+            QMenu#NoteEditorContextMenu QToolButton:hover { background: #52616E;
+                border-color: #E99549; }
+            QMenu#NoteEditorContextMenu QToolButton:checked { background: #744522;
+                color: #FFFFFF; border-color: #F1A15A; }
+            QMenu#NoteEditorContextMenu QToolButton:disabled { color: #A8B0B9; }
+            QMenu#NoteEditorContextMenu QLabel { color: #D5DEE6; }
         """)
         self.font_family = QFontComboBox()
         self.font_family.setMinimumWidth(152)
