@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import Qt, QTimer, QSignalBlocker
 from PySide6.QtGui import QIcon, QKeySequence
-from PySide6.QtWidgets import (QCheckBox, QDialog, QDialogButtonBox, QFormLayout,
+from PySide6.QtWidgets import (QComboBox, QCheckBox, QDialog, QDialogButtonBox, QFormLayout,
                               QHBoxLayout, QKeySequenceEdit, QLabel, QPushButton,
                               QSlider, QVBoxLayout)
 
@@ -25,6 +25,13 @@ class AppearanceDialog(QDialog):
         root = QVBoxLayout(self)
         root.addWidget(QLabel("HUD 外观  //  修改时预览，保存后下次启动沿用"))
         form = QFormLayout()
+        self.original_skin = controller.store.data.get('skin', 'division')
+        self.skin = QComboBox()
+        self.skin.addItem('全境封锁 · ISAC', 'division')
+        self.skin.addItem('赛博朋克 2077 · 强尼银手', 'cyberpunk')
+        self.skin.setCurrentIndex(1 if self.original_skin == 'cyberpunk' else 0)
+        self.skin.currentIndexChanged.connect(self.changed)
+        form.addRow('皮肤与助手', self.skin)
         self.sliders, self.labels = {}, {}
         for key, title, low, high, unit in (("opacity", "桌面底板不透明度", 40, 100, "%"),
                                            ("font_size", "界面字号", 10, 16, " px"),
@@ -75,7 +82,7 @@ class AppearanceDialog(QDialog):
         self.preview_timer.start()
 
     def preview(self):
-        self.controller.apply_appearance(self.values())
+        self.controller.apply_appearance(self.values(), self.skin.currentData())
 
     def reset_defaults(self):
         for key, slider in self.sliders.items():
@@ -94,6 +101,11 @@ class AppearanceDialog(QDialog):
             return
         self.preview_timer.stop()
         self.preview()
+        if self.skin.currentData() != self.original_skin:
+            self.controller.llm.set_persona(self.skin.currentData())
+            self.controller.chat.log.clear()
+            self.controller.chat.append_message('系统', '助手已切换，开始新对话。')
+        self.controller.store.data['skin'] = self.skin.currentData()
         self.controller.store.data["hud"] = self.values()
         self.controller.store.data["search"] = {"enabled": self.enabled.isChecked(), "shortcut": canonical}
         self.controller.store.save()
@@ -101,5 +113,5 @@ class AppearanceDialog(QDialog):
 
     def reject(self):
         self.preview_timer.stop()
-        self.controller.apply_appearance(self.original)
+        self.controller.apply_appearance(self.original, self.original_skin)
         super().reject()

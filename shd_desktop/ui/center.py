@@ -42,7 +42,7 @@ from shd_desktop.ai.llm import LlmClient
 from shd_desktop.music.music import MusicPane
 from shd_desktop.ui.weather_art import weather_pixmap
 from shd_desktop.integration.startup import is_enabled as startup_enabled, set_enabled as set_startup_enabled
-from shd_desktop.ui.theme import current_hud, hud_section, scaled_style
+from shd_desktop.ui.theme import current_hud, hud_section, scaled_style, assistant_name
 from pathlib import Path
 
 from shd_desktop.resources import ASSETS
@@ -155,6 +155,8 @@ class SchedulePane(QWidget):
         self.refresh()
 
     def apply_hud(self) -> None:
+        if hasattr(self, "assistant_action"):
+            self.assistant_action.setText(assistant_name())
         self.setStyleSheet(scaled_style('''
             QLabel#ScheduleSummary { color: #94989F; font-size: 11px; }
             QListWidget#ScheduleList { background: transparent; border: 0;
@@ -428,6 +430,8 @@ class WeatherPane(QWidget):
             self.city.setText(location["name"])
 
     def apply_hud(self) -> None:
+        if hasattr(self, "assistant_action"):
+            self.assistant_action.setText(assistant_name())
         self.setStyleSheet(scaled_style('''
             QLabel#WeatherCurrent { font-size: 24px; font-weight: 400; color: #FF9D52; }
             QLabel#WeatherForecastTitle { color: #ADB1B8; font-size: 12px; padding: 4px 0; }
@@ -648,7 +652,7 @@ class ControlCenter(QMainWindow):
             desktop_menu.addSeparator()
             desktop_menu.addAction("新建便签", on_new_note)
             desktop_menu.addAction("管理便签", on_notes)
-        toolbar.addAction(QIcon(str(ICON_DIR / "fn-isac-gen-64.png")), "ISAC", on_chat)
+        self.assistant_action = toolbar.addAction(QIcon(str(ICON_DIR / "fn-isac-gen-64.png")), "ISAC", on_chat)
         if on_find:
             toolbar.addAction("快速查找", on_find)
         spacer = QWidget()
@@ -725,6 +729,8 @@ class ControlCenter(QMainWindow):
         self.activateWindow()
 
     def apply_hud(self) -> None:
+        if hasattr(self, "assistant_action"):
+            self.assistant_action.setText(assistant_name())
         self.setStyleSheet(scaled_style('''
             QLabel#CenterBrand { color: #F48A35; font-size: 12px; padding: 0 12px 0 2px; }
             QToolBar#CenterToolbar { background: transparent; border: 0;

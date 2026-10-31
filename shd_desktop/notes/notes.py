@@ -206,6 +206,9 @@ class NoteWindow(QWidget):
     def refresh(self) -> None:
         name = self.note.get("color", DEFAULT_COLOR)
         background, foreground = COLORS.get(name, COLORS[DEFAULT_COLOR])
+        from shd_desktop.ui.theme import cyberpunk
+        if cyberpunk():
+            background, foreground = '#111214', '#EAF0EF'
         self.setWindowTitle(self.note.get("title", "新便签"))
         self.header.setText(("★  " if self.note.get("starred") else "") + self.windowTitle())
         self.editor.setReadOnly(bool(self.note.get("locked")))
@@ -228,10 +231,21 @@ class NoteWindow(QWidget):
             QPushButton#NoteMenuButton:hover, QPushButton#NoteHideButton:hover {{
                 background: {background}; border: 1px solid {foreground}; }}
         """)
+        if cyberpunk():
+            self.header.setStyleSheet("color:#111214;font-weight:700")
+        else:
+            self.header.setStyleSheet("")
         self.update()
+
+    def apply_hud(self):
+        self.refresh()
 
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
+        from shd_desktop.ui.theme import cyberpunk, paint_cyber_frame
+        if cyberpunk():
+            paint_cyber_frame(painter, self.rect(), 40)
+            return
         background = QColor(COLORS.get(self.note.get("color"), COLORS[DEFAULT_COLOR])[0])
         background.setAlpha(round(max(35, min(100, int(self.note.get("opacity", 96)))) * 255 / 100))
         painter.fillRect(self.rect().adjusted(1, 1, -1, -1), background)

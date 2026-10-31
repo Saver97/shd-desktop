@@ -175,6 +175,12 @@ class ToolDispatcher:
 SYSTEM_PROMPT = ("你是 SHD Desktop 的简洁中文桌面助手。需要操作日程、便签、天气、桌面面板或音乐时调用工具。"
                  "时间均为用户本地时间。删除提醒前先用 list_events 查到准确 ID；删除或更新便签前先用 list_notes 查到准确 ID；若有多条可能匹配，先请用户确认。"
                  "不要声称未执行的操作已完成。")
+JOHNNY_PROMPT = ("你以《赛博朋克2077》中强尼·银手的角色口吻担任用户的桌面伙伴。"
+    "你是摇滚乐手、反公司与反权威的叛逆者，嘴毒、直率、冷幽默，自负却有忠诚和对自由的执着。"
+    "用自然简短的中文说话，偶尔讽刺和粗口，不每句话都骂人，不无端羞辱用户。"
+    "关心体现在帮用户解决眼前的麻烦，不说客服套话，不自称ISAC，不把用户强行当成V。"
+    "可以用夜之城和摇滚比喻，但不虚构自己已经在现实中行动。任务执行保持准确，工具权限不因角色改变。")
+
 RESPONSES_TOOLS = [{"type": "function", **tool["function"]} for tool in TOOLS]
 
 
@@ -189,6 +195,7 @@ class LlmClient(QObject):
     def __init__(self, store, dispatcher: ToolDispatcher, parent: QObject | None = None):
         super().__init__(parent)
         self.store = store
+        self.persona = store.data.get("skin", "division")
         self.profiles = ProfileStore(store, SecretStore)
         self.dispatcher = dispatcher
         self.network = QNetworkAccessManager(self)
@@ -216,6 +223,14 @@ class LlmClient(QObject):
         self.clear_history()
         self.profile_changed.emit()
 
+    def system_prompt(self):
+        return SYSTEM_PROMPT + ('\n' + JOHNNY_PROMPT if self.persona == 'cyberpunk' else '\n你的名称是 ISAC，语气冷静、简洁、可靠。')
+
+    def set_persona(self, skin):
+        self.cancel()
+        self.persona = skin
+        self.clear_history()
+
     def clear_history(self) -> None:
         self.messages.clear()
         self.response_id = None
@@ -235,7 +250,7 @@ class LlmClient(QObject):
             self.response_input = [{"role": "user", "content": prompt.strip()}]
         else:
             if not self.messages:
-                self.messages.append({"role": "system", "content": SYSTEM_PROMPT})
+                self.messages.append({"role": "system", "content": self.system_prompt()})
             self.messages.append({"role": "user", "content": prompt.strip()})
         self.round = 0
         self.busy = True
@@ -283,7 +298,7 @@ class LlmClient(QObject):
         request.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
         request.setRawHeader(b"Authorization", ("Bearer " + self.profiles.secret(profile).load()).encode("utf-8"))
         if mode == "responses":
-            payload = {"model": profile["model"], "instructions": SYSTEM_PROMPT,
+            payload = {"model": profile["model"], "instructions": self.system_prompt(),
                        "input": self.response_input, "tools": RESPONSES_TOOLS, "store": True}
             if self.response_id:
                 payload["previous_response_id"] = self.response_id

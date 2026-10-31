@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPixmap
+from PySide6.QtCore import Qt, QPointF
+from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPixmap, QPolygonF
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QSizePolicy, QWidget
 
 
@@ -14,6 +14,38 @@ ORANGE = "#F48A35"
 MUTED = "#98A9AF"
 
 HUD_DEFAULTS = {"opacity": 74, "font_size": 12, "icon_size": 40}
+
+
+def cyberpunk():
+    return getattr(QApplication.instance(), '_shd_skin', 'division') == 'cyberpunk'
+
+
+def assistant_name():
+    return '强尼·银手' if cyberpunk() else 'ISAC'
+
+
+def title_style(size=18):
+    return scaled_style(f"color:{'#111214' if cyberpunk() else '#F1F1F1'};font-size:{size:g}px;font-weight:{700 if cyberpunk() else 400};background:transparent")
+
+
+def paint_cyber_frame(painter, rect, header=48):
+    painter.setRenderHint(QPainter.Antialiasing)
+    w, h = rect.width()-2, rect.height()-2
+    def polygon(points):
+        return QPolygonF([QPointF(x,y) for x,y in points])
+    outline = polygon([(13,2),(w-13,2),(w,15),(w,h-13),(w-13,h),(13,h),(2,h-13),(2,15)])
+    painter.setBrush(hud_background())
+    painter.setPen(QPen(QColor('#FCEE0A'),2))
+    painter.drawPolygon(outline)
+    painter.setBrush(Qt.NoBrush)
+    painter.setPen(QPen(QColor('#8C850C'),1))
+    painter.drawPolygon(polygon([(16,7),(w-17,7),(w-5,19),(w-5,h-17),(w-17,h-5),(17,h-5),(7,h-17),(7,19)]))
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor('#FCEE0A'))
+    painter.drawPolygon(polygon([(14,9),(w-14,9),(w-9,15),(w-9,header-8),(w-22,header),(9,header),(9,15)]))
+    painter.setPen(QPen(QColor('#35EAF2'),2))
+    painter.drawLine(8,header+8,8,header+22)
+    painter.drawLine(w-22,h-7,w-8,h-21)
 
 
 def normalize_hud(value) -> dict:
@@ -39,6 +71,9 @@ def hud_background() -> QColor:
 
 
 def scaled_style(style: str) -> str:
+    if cyberpunk():
+        for old,new in {'#F48A35':'#FCEE0A','#FF9D52':'#FFF65C','#915024':'#23676B','#493A28':'#17474A','#FFAE70':'#35EAF2'}.items():
+            style = style.replace(old,new)
     scale = current_hud()["font_size"] / 12
     return re.sub(r"(font-size:\s*)(\d+)px", lambda match:
                   match[1] + str(round(int(match[2]) * scale)) + "px", style)
@@ -85,6 +120,15 @@ class HudHeader(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
+        if cyberpunk():
+            paint_cyber_frame(painter, self.rect(), 38)
+            painter.setPen(QColor('#111214'))
+            painter.setFont(QFont('Microsoft YaHei UI', 16, QFont.Bold))
+            painter.drawText(20, 29, self.title.replace('ISAC', 'JOHNNY'))
+            painter.setPen(QColor('#35EAF2'))
+            painter.setFont(QFont('Microsoft YaHei UI', 9))
+            painter.drawText(20, 59, self.subtitle)
+            return
         painter.fillRect(self.rect(), QColor("#151618"))
         painter.fillRect(16, 25, 6, 6, QColor(244, 138, 53))
         painter.setPen(QColor("#F1F1F1"))

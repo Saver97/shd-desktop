@@ -7,7 +7,7 @@ import html
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QSignalBlocker, QTimer, QUrl
-from PySide6.QtGui import QColor, QIcon, QMouseEvent, QPainter, QPen
+from PySide6.QtGui import QPixmap, QColor, QIcon, QMouseEvent, QPainter, QPen
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QComboBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget,
@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 
 from shd_desktop.ai.llm import LlmClient
 from shd_desktop.ai.llm_profiles import api_base
-from shd_desktop.ui.theme import HudHeader, hud_background, scaled_style
+from shd_desktop.ui.theme import HudHeader, hud_background, scaled_style, cyberpunk, paint_cyber_frame, title_style, assistant_name
 
 
 from shd_desktop.resources import ASSETS
@@ -72,6 +72,7 @@ class ChatWindow(QWidget):
         title_row = QHBoxLayout()
         logo = QLabel()
         logo.setPixmap(QIcon(str(ICON_DIR / "fn-isac-gen-64.png")).pixmap(28, 28))
+        self.logo = logo
         title_row.addWidget(logo)
         self.drag_label = ChatDragLabel(self)
         self.drag_label.setText("ISAC  //  终端对话")
@@ -92,6 +93,7 @@ class ChatWindow(QWidget):
         close_button.setFixedWidth(32)
         close_button.clicked.connect(self.hide)
         title_row.addWidget(close_button)
+        self.title_buttons = (self.pin_button, settings_button, close_button)
         root.addLayout(title_row)
         divider = QWidget()
         divider.setFixedHeight(1)
@@ -141,13 +143,28 @@ class ChatWindow(QWidget):
         self.apply_hud()
 
     def apply_hud(self):
-        self.drag_label.setStyleSheet(scaled_style("color:#F1F1F1;font-weight:400;font-size:18px"))
+        for button in self.title_buttons:
+            button.setStyleSheet('color:#111214;background:transparent;border:1px solid #706B08;padding:3px' if cyberpunk() else '')
+        self.signal_label.setStyleSheet('color:#111214;font-size:10px;font-weight:700' if cyberpunk() else 'color:#85C8BF;font-size:10px;font-weight:700')
+        if cyberpunk():
+            self.logo.setPixmap(QPixmap())
+            self.logo.setText('JS')
+            self.logo.setStyleSheet('color:#111214;font-size:17px;font-weight:900')
+        else:
+            self.logo.setText('')
+            self.logo.setPixmap(QIcon(str(ICON_DIR / 'fn-isac-gen-64.png')).pixmap(28,28))
+        self.setWindowTitle('SHD Desktop · ' + assistant_name())
+        self.drag_label.setText(assistant_name() if cyberpunk() else 'ISAC  //  终端对话')
+        self.drag_label.setStyleSheet(title_style(18))
         self.status.setStyleSheet(scaled_style("color:#9FB5B9;font-size:11px"))
         self.log.document().setDefaultFont(self.input.font())
         self.update()
 
     def paintEvent(self, event):
         painter = QPainter(self)
+        if cyberpunk():
+            paint_cyber_frame(painter, self.rect(), 52)
+            return
         painter.fillRect(self.rect().adjusted(1, 1, -2, -2), hud_background())
         painter.fillRect(1, 15, 3, 28, QColor(244, 138, 53))
 
@@ -245,7 +262,7 @@ class ChatWindow(QWidget):
         self.client.ask(message)
 
     def answer(self, message: str):
-        self.append_message("ISAC", message)
+        self.append_message("强尼·银手" if self.client.persona == "cyberpunk" else "ISAC", message)
         self.status.setText("就绪")
 
     def error(self, message: str):

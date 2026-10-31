@@ -10,3 +10,5 @@ dist-clean/
 release/
 release-candidate/
 build-single/
+
+tests/skin-*.png

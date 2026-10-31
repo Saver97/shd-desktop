@@ -4,7 +4,7 @@
 
 ## 下载与启动
 
-从 [最新 Release](https://github.com/Saver97/shd-desktop/releases/latest) 下载 `SHDDesktop-1.0.5.exe`，放在固定目录后双击运行。单文件版无需安装 Python；首次启动会在当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime` 缓存运行组件。
+从 [最新 Release](https://github.com/Saver97/shd-desktop/releases/latest) 下载 `SHDDesktop-1.0.6.exe`，放在固定目录后双击运行。单文件版无需安装 Python；首次启动会在当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime` 缓存运行组件。
 
 升级时先从托盘选择“退出 SHD Desktop”，再启动新版本，让已整理的桌面图标正常恢复。桌面空白处右键可打开程序或新建便签；Windows 11 可能需要先点“显示更多选项”。
 
@@ -32,7 +32,7 @@
 若程序无法正常打开，可在 PowerShell 中运行：
 
 ```powershell
-.\SHDDesktop-1.0.5.exe --restore-desktop-icons
+.\SHDDesktop-1.0.6.exe --restore-desktop-icons
 ```
 
 详细改动见 [发布记录](RELEASE_NOTES.md)。
@@ -75,8 +75,12 @@ python -m venv .venv-release
 .\build.ps1
 ```
 
-构建结果位于 `release-candidate/1.0.5`。GitHub Release 的附件仅提供 EXE；当前版本的 SHA256 见 [封版基准](docs/design/封版基准.md)。
+构建结果位于 `release-candidate/1.0.6`。GitHub Release 的附件仅提供 EXE；当前版本的 SHA256 见 [封版基准](docs/design/封版基准.md)。
 
 ## 使用说明
 
 QQ 音乐接口依赖社区项目，登录、限流和播放权限由服务端决定。Windows 10 实机、显示器热插拔及 Explorer 重启后的行为仍需在试用设备上复核。第三方组件及用途限制见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。本仓库暂未为项目源码设置许可证。
+
+## 皮肤与助手
+
+设置 → 外观与快捷键 → 皮肤与助手，可选择全境封锁 / ISAC 或赛博朋克 2077 / 强尼银手。预览可取消，保存后下次启动沿用；切换人设会结束当前回复并开启新对话，模型配置与用户数据保留。

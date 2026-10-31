@@ -57,7 +57,7 @@ from shd_desktop.integration.instance import claim_or_forward, receive_requests
 from shd_desktop.ai.llm import LlmClient, ToolDispatcher
 from shd_desktop.data.services import ScheduleStore, WeatherClient
 from shd_desktop.ui.weather_art import weather_pixmap
-from shd_desktop.ui.theme import STYLE, apply_hud, current_hud, hud_background, scaled_style, normalize_hud
+from shd_desktop.ui.theme import STYLE, apply_hud, current_hud, hud_background, scaled_style, normalize_hud, cyberpunk, paint_cyber_frame, title_style, assistant_name
 from shd_desktop.ui.appearance import AppearanceDialog
 from shd_desktop.ui.quick_find import QuickFind
 from shd_desktop.integration.search_hotkey import SearchHotkey, DEFAULT_SHORTCUT
@@ -435,6 +435,7 @@ class FolderPanel(QWidget):
                                   lambda: self.on_remove(self.config["id"]))
 
         self.list = FolderList(self)
+        self._division_list_style = self.list.styleSheet()
         self.list.setContextMenuPolicy(Qt.CustomContextMenu)
         self.list.customContextMenuRequested.connect(self.item_menu)
         self.list.itemDoubleClicked.connect(self.open_item)
@@ -472,6 +473,9 @@ class FolderPanel(QWidget):
 
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
+        if cyberpunk():
+            paint_cyber_frame(painter, self.rect(), 52)
+            return
         bounds = self.rect().adjusted(1, 1, -2, -2)
         painter.fillRect(bounds, hud_background())
         painter.fillRect(1, 12, 3, 29, QColor(244, 138, 53))
@@ -615,14 +619,18 @@ class FolderPanel(QWidget):
 
     def apply_hud(self) -> None:
         scale = current_hud()["font_size"] / 12
-        self.header.setStyleSheet(f"color:#F1F1F1;font-size:{min(24, round(21 * scale))}px;font-weight:400")
-        self.item_badge.setStyleSheet(f"color:#F48A35;font-family:'Bahnschrift';font-size:{min(24, round(20 * scale))}px;padding:0 6px")
+        self.header.setStyleSheet(title_style(min(21, 24 / scale)))
+        self.item_badge.setStyleSheet(f"color:{' #111214' if cyberpunk() else '#F48A35'};font-family:'Bahnschrift';font-size:{min(24, round(20 * scale))}px;padding:0 6px")
         self.count_label.setStyleSheet(scaled_style("color:#A2ABB8;font-size:10px"))
         for button in (self.manage_button, self.collapse_button):
             button.setStyleSheet(scaled_style(
                 "QPushButton{border:0;border-bottom:1px solid rgba(255,255,255,65);"
                 "background:rgba(255,255,255,14);color:#E8EEEC;padding:3px 5px;font-size:11px}"
                 "QPushButton:hover{background:#F48A35;color:#17191D}"))
+        self.list.setStyleSheet(scaled_style("QListWidget{background:transparent;border:0;color:#EAF0EF;} QListWidget::item{padding:5px;} QListWidget::item:selected{background:#17474A;border:1px solid #35EAF2;}" ) if cyberpunk() else self._division_list_style)
+        if cyberpunk():
+            for button in (self.manage_button, self.collapse_button):
+                button.setStyleSheet("color:#111214;background:transparent;border:1px solid #706B08;padding:3px;font-size:11px")
         self.apply_view()
         self._reflow_icons(force=True)
         self.update()
@@ -933,12 +941,15 @@ class StatusPanel(QWidget):
         self.refresh()
 
     def apply_hud(self) -> None:
-        self.header.setStyleSheet(scaled_style("color:#F1F1F1;font-size:16px;font-weight:400"))
+        self.header.setStyleSheet(title_style(16))
         self.content.setStyleSheet(scaled_style("color:#E8E6E3;font-size:12px"))
         self.update()
 
     def paintEvent(self, event) -> None:
         painter = QPainter(self)
+        if cyberpunk():
+            paint_cyber_frame(painter, self.rect(), 40)
+            return
         painter.fillRect(self.rect().adjusted(1, 1, -2, -2), hud_background())
         painter.fillRect(1, 12, 3, 23, QColor(244, 138, 53))
 
@@ -1007,6 +1018,13 @@ class IsacLauncher(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
+        if cyberpunk():
+            paint_cyber_frame(painter, self.rect(), 24)
+            painter.setPen(QColor('#111214'))
+            painter.drawText(self.rect().adjusted(0,7,0,-40), Qt.AlignCenter, '2077')
+            painter.setPen(QColor('#35EAF2'))
+            painter.drawText(self.rect().adjusted(0,25,0,0), Qt.AlignCenter, 'JS')
+            return
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(QColor(20, 27, 33, 238))
         painter.setPen(QPen(QColor(255, 132, 38), 2))
@@ -1038,6 +1056,7 @@ class Controller:
                  desktop_roots: list[Path] | None = None, enable_hotkeys: bool = True):
         self.app = app
         self.store = store
+        app._shd_skin = store.data.get("skin", "division")
         apply_hud(app, normalize_hud(store.data.get("hud")))
         self.scenes = SceneStore(store)
         self._history = store.data.setdefault("undo_history", [])
@@ -1740,8 +1759,13 @@ class Controller:
         self.chat.raise_()
         self.chat.activateWindow()
 
-    def apply_appearance(self, values) -> None:
+    def apply_appearance(self, values, skin=None) -> None:
+        if skin is not None and skin != getattr(self.app, '_shd_skin', 'division'):
+            self.app._shd_skin = skin
+            self.app._shd_hud = None
         apply_hud(self.app, values)
+        self.isac_launcher.setToolTip('点击打开 ' + assistant_name() + '；拖动调整位置')
+        self.center.assistant_action.setText(assistant_name())
 
     def open_appearance(self) -> None:
         if self.appearance_window and self.appearance_window.isVisible():
@@ -1842,7 +1866,7 @@ def main() -> int:
     args = parser.parse_args()
     app = QApplication(sys.argv)
     app.setApplicationName("SHD Desktop")
-    app.setApplicationVersion("1.0.5")
+    app.setApplicationVersion("1.0.6")
     app.setWindowIcon(QIcon(str(ICON)))
     app.setFont(QFont("Microsoft YaHei UI", 10))
     app.setStyleSheet(STYLE)

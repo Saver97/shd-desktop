@@ -20,6 +20,7 @@ class Handler(BaseHTTPRequestHandler):
         request = json.loads(self.rfile.read(size))
         assert request["model"] == "test-model", request
         mode = "responses" if self.path.endswith("/responses") else "chat"
+        assert "强尼" in (request.get("instructions", "") if mode == "responses" else request["messages"][0]["content"])
         Handler.calls[mode] += 1
         if mode == "responses":
             if Handler.calls[mode] == 1:
@@ -63,6 +64,7 @@ with TemporaryDirectory() as temp:
         f"http://127.0.0.1:{server.server_port}/v1", "model": "test-model"}},
         "file": root / "layout.json", "save": lambda self: None})()
     client = LlmClient(store, ToolDispatcher(events, store, {}), app)
+    client.set_persona("cyberpunk")
     answers = []
     errors = []
     client.answer.connect(lambda message: (answers.append(message), app.quit()))
