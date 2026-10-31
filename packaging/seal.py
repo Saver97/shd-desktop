@@ -1,4 +1,4 @@
-"""Seal the tested 1.0.6 single-EXE candidate without touching prior releases."""
+"""Seal the tested 1.0.7 single-EXE candidate without touching prior releases."""
 
 import hashlib
 import json
@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "1.0.6"
+VERSION = "1.0.7"
 CANDIDATE = ROOT / "release-candidate" / VERSION / "SHDDesktop.exe"
 SEALED = ROOT / "release" / "sealed" / VERSION
 RUNTIME = {

@@ -237,6 +237,14 @@ class ChatWindow(QWidget):
             "系统": ("#F3C982", "#3A3328", "#D6A54B"),
             "错误": ("#FF9A92", "#493033", "#E6665B"),
         }
+        if cyberpunk():
+            palette = {
+                "你": ("#35EAF2", "#102429", "#35EAF2"),
+                "强尼·银手": ("#FCEE0A", "#191B1D", "#FCEE0A"),
+                "ISAC": ("#FCEE0A", "#191B1D", "#FCEE0A"),
+                "系统": ("#A9B5BC", "#151A20", "#35EAF2"),
+                "错误": ("#FF6475", "#2A171D", "#FF6475"),
+            }
         label, background, accent = palette.get(role, palette["系统"])
         safe = html.escape(content).replace("\n", "<br>")
         self.log.append(

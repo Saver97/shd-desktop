@@ -34,6 +34,11 @@ with TemporaryDirectory() as tmp:
     app.processEvents()
     panel = next(iter(c.panels.values()))
     panel.grab().save('tests/skin-cyberpunk.png')
+    c.chat.append_message('你', '帮我看看今天的日程。')
+    c.chat.append_message('强尼·银手', '先把眼前的事办完。\n日程、便签、音乐——说吧，先处理哪个？')
+    html = c.chat.log.toHtml().lower()
+    assert '#191b1d' in html and '#35eaf2' in html and '#fcee0a' in html
+    assert '#3a3328' not in html and '#38312c' not in html
     c.chat.grab().save('tests/skin-chat.png')
     c.open_appearance()
     d=c.appearance_window

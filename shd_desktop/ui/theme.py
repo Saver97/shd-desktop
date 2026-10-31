@@ -42,10 +42,19 @@ def paint_cyber_frame(painter, rect, header=48):
     painter.drawPolygon(polygon([(16,7),(w-17,7),(w-5,19),(w-5,h-17),(w-17,h-5),(17,h-5),(7,h-17),(7,19)]))
     painter.setPen(Qt.NoPen)
     painter.setBrush(QColor('#FCEE0A'))
-    painter.drawPolygon(polygon([(14,9),(w-14,9),(w-9,15),(w-9,header-8),(w-22,header),(9,header),(9,15)]))
+    compact = h <= header + 10
+    if compact:
+        # A collapsed panel is only a title bar. Keep its fill inside both
+        # lower chamfers instead of drawing the expanded header to the bottom.
+        painter.drawPolygon(polygon([(17,10),(w-18,10),(w-9,19),
+                                     (w-9,h-18),(w-18,h-9),(18,h-9),
+                                     (10,h-18),(10,19)]))
+    else:
+        painter.drawPolygon(polygon([(14,9),(w-14,9),(w-9,15),(w-9,header-8),(w-22,header),(9,header),(9,15)]))
     painter.setPen(QPen(QColor('#35EAF2'),2))
-    painter.drawLine(8,header+8,8,header+22)
-    painter.drawLine(w-22,h-7,w-8,h-21)
+    if not compact:
+        painter.drawLine(8,header+8,8,header+22)
+        painter.drawLine(w-22,h-7,w-8,h-21)
 
 
 def normalize_hud(value) -> dict:
