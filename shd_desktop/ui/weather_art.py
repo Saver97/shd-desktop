@@ -30,6 +30,9 @@ def weather_kind(code: int) -> str:
 
 
 def weather_pixmap(code: int, size: int = 64) -> QPixmap:
+    from shd_desktop.ui.theme import cyberpunk
+    accent = QColor("#FCEE0A") if cyberpunk() else ORANGE
+    blue = QColor("#35EAF2") if cyberpunk() else BLUE
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.transparent)
     painter = QPainter(pixmap)
@@ -37,7 +40,7 @@ def weather_pixmap(code: int, size: int = 64) -> QPixmap:
     painter.scale(size / 64, size / 64)
     kind = weather_kind(code)
     if kind in ("sun", "cloud"):
-        painter.setPen(QPen(ORANGE, 2.5, Qt.SolidLine, Qt.RoundCap))
+        painter.setPen(QPen(accent, 2.5, Qt.SolidLine, Qt.RoundCap))
         painter.setBrush(Qt.NoBrush)
         painter.drawEllipse(QPointF(28, 25), 10, 10)
         for index in range(8):
@@ -55,20 +58,20 @@ def weather_pixmap(code: int, size: int = 64) -> QPixmap:
         painter.setPen(QPen(WHITE, 2.4))
         painter.drawPath(cloud)
     if kind == "fog":
-        painter.setPen(QPen(BLUE, 2.1, Qt.SolidLine, Qt.RoundCap))
+        painter.setPen(QPen(blue, 2.1, Qt.SolidLine, Qt.RoundCap))
         for y in (48, 54, 60):
             painter.drawLine(16, y, 48, y)
     elif kind == "rain":
-        painter.setPen(QPen(BLUE, 2.6, Qt.SolidLine, Qt.RoundCap))
+        painter.setPen(QPen(blue, 2.6, Qt.SolidLine, Qt.RoundCap))
         for x in (22, 33, 44):
             painter.drawLine(x, 49, x - 3, 58)
     elif kind == "snow":
-        painter.setPen(QPen(BLUE, 2.1, Qt.SolidLine, Qt.RoundCap))
+        painter.setPen(QPen(blue, 2.1, Qt.SolidLine, Qt.RoundCap))
         for x in (22, 34, 46):
             painter.drawLine(x - 3, 54, x + 3, 54)
             painter.drawLine(x, 51, x, 57)
     elif kind == "storm":
-        painter.setPen(QPen(ORANGE, 2.0))
+        painter.setPen(QPen(accent, 2.0))
         painter.setBrush(ORANGE)
         bolt = QPainterPath()
         bolt.moveTo(32, 46)

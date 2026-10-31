@@ -42,6 +42,7 @@ from shd_desktop.ai.llm import LlmClient
 from shd_desktop.music.music import MusicPane
 from shd_desktop.ui.weather_art import weather_pixmap
 from shd_desktop.integration.startup import is_enabled as startup_enabled, set_enabled as set_startup_enabled
+from shd_desktop.ui.skin_surface import skin_icon
 from shd_desktop.ui.theme import current_hud, hud_section, scaled_style, assistant_name
 from pathlib import Path
 
@@ -375,7 +376,7 @@ class WeatherPane(QWidget):
         self.city.setPlaceholderText("输入城市，例如 香港、上海")
         search.addWidget(self.city, 1)
         button = QPushButton("搜索并添加")
-        button.setIcon(QIcon(str(ICON_DIR / "fn-search-gen-64.png")))
+        button.setIcon(skin_icon(ICON_DIR / "fn-search-gen-64.png"))
         button.clicked.connect(self.search_city)
         search.addWidget(button)
         self.city.returnPressed.connect(self.search_city)
@@ -598,7 +599,7 @@ class WeatherPane(QWidget):
     def show_error(self, error: str) -> None:
         if self.location_editor.isVisible():
             self.location_status.setText(f"地区服务请求失败：{error}")
-        self.current_icon.setPixmap(QIcon(str(ICON_DIR / "fn-alert-gen-64.png")).pixmap(70, 70))
+        self.current_icon.setPixmap(skin_icon(ICON_DIR / "fn-alert-gen-64.png").pixmap(70, 70))
         cached = self.store.data.get("weather_cache")
         if cached:
             self.render(cached, cached=True)
@@ -652,7 +653,7 @@ class ControlCenter(QMainWindow):
             desktop_menu.addSeparator()
             desktop_menu.addAction("新建便签", on_new_note)
             desktop_menu.addAction("管理便签", on_notes)
-        self.assistant_action = toolbar.addAction(QIcon(str(ICON_DIR / "fn-isac-gen-64.png")), "ISAC", on_chat)
+        self.assistant_action = toolbar.addAction(skin_icon(ICON_DIR / "fn-isac-gen-64.png"), "ISAC", on_chat)
         if on_find:
             toolbar.addAction("快速查找", on_find)
         spacer = QWidget()
@@ -701,11 +702,11 @@ class ControlCenter(QMainWindow):
         self.weather = WeatherPane(store, weather)
         self.music = MusicPane(store.file.parent)
         self.notes = notes_manager
-        self.tabs.addTab(self.schedule, QIcon(str(ICON_DIR / "fn-briefing-gen-64.png")), "日程")
+        self.tabs.addTab(self.schedule, skin_icon(ICON_DIR / "fn-briefing-gen-64.png"), "日程")
         if self.notes is not None:
-            self.tabs.addTab(self.notes, QIcon(str(ICON_DIR / "fn-widgets-gen-64.png")), "便签")
-        self.tabs.addTab(self.weather, QIcon(str(ICON_DIR / "cat-intel-gen-64.png")), "天气")
-        self.tabs.addTab(self.music, QIcon(str(ICON_DIR / "cat-media-gen-64.png")), "音乐")
+            self.tabs.addTab(self.notes, skin_icon(ICON_DIR / "fn-widgets-gen-64.png"), "便签")
+        self.tabs.addTab(self.weather, skin_icon(ICON_DIR / "cat-intel-gen-64.png"), "天气")
+        self.tabs.addTab(self.music, skin_icon(ICON_DIR / "cat-media-gen-64.png"), "音乐")
         llm.tools_changed.connect(self.schedule.refresh)
         self.setCentralWidget(self.tabs)
         self.statusBar().showMessage("● 系统就绪")
@@ -750,6 +751,9 @@ class ControlCenter(QMainWindow):
             QMainWindow#ControlCenter QStatusBar { background: transparent;
                 border: 0; color: #8F959E; }
         '''))
+        from shd_desktop.ui.skin_surface import CHROME, active
+        if active():
+            self.setStyleSheet(self.styleSheet() + CHROME)
         self._update_toolbar_density()
 
     def refresh_scenes(self) -> None:

@@ -34,6 +34,13 @@ with TemporaryDirectory() as tmp:
     app.processEvents()
     panel = next(iter(c.panels.values()))
     panel.grab().save('tests/skin-cyberpunk.png')
+    c.center.show()
+    c.settings.show()
+    app.processEvents()
+    c.center.grab().save('tests/skin-center.png')
+    c.settings.grab().save('tests/skin-settings.png')
+    assert c.center.windowTitle() == '2077 · 夜之城控制终端'
+    assert c.center.tabs.tabText(0) == '委托'
     c.chat.append_message('你', '帮我看看今天的日程。')
     c.chat.append_message('强尼·银手', '先把眼前的事办完。\n日程、便签、音乐——说吧，先处理哪个？')
     html = c.chat.log.toHtml().lower()

@@ -57,6 +57,7 @@ from shd_desktop.integration.instance import claim_or_forward, receive_requests
 from shd_desktop.ai.llm import LlmClient, ToolDispatcher
 from shd_desktop.data.services import ScheduleStore, WeatherClient
 from shd_desktop.ui.weather_art import weather_pixmap
+from shd_desktop.ui.skin_surface import skin_icon
 from shd_desktop.ui.theme import STYLE, apply_hud, current_hud, hud_background, scaled_style, normalize_hud, cyberpunk, paint_cyber_frame, title_style, assistant_name
 from shd_desktop.ui.appearance import AppearanceDialog
 from shd_desktop.ui.quick_find import QuickFind
@@ -124,7 +125,7 @@ CATEGORIES = {
 
 
 def themed_icon(name: str) -> QIcon:
-    return QIcon(str(ICON_DIR / name))
+    return skin_icon(ICON_DIR / name)
 
 
 def desktop_path() -> Path:
@@ -619,6 +620,13 @@ class FolderPanel(QWidget):
 
     def apply_hud(self) -> None:
         scale = current_hud()["font_size"] / 12
+        if cyberpunk():
+            from shd_desktop.ui.cyber_icons import category_pixmap
+            self.category_icon.setPixmap(category_pixmap(
+                self.config.get("title", ""), self.config.get("icon", "")))
+        else:
+            self.category_icon.setPixmap(QPixmap(str(ICON_DIR / self.config.get("icon", CATEGORIES["其他"]))).scaled(
+                25, 25, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         self.header.setStyleSheet(title_style(min(21, 24 / scale)))
         self.item_badge.setStyleSheet(f"color:{' #111214' if cyberpunk() else '#F48A35'};font-family:'Bahnschrift';font-size:{min(24, round(20 * scale))}px;padding:0 6px")
         self.count_label.setStyleSheet(scaled_style("color:#A2ABB8;font-size:10px"))
@@ -943,6 +951,7 @@ class StatusPanel(QWidget):
     def apply_hud(self) -> None:
         self.header.setStyleSheet(title_style(16))
         self.content.setStyleSheet(scaled_style("color:#E8E6E3;font-size:12px"))
+        self.refresh()
         self.update()
 
     def paintEvent(self, event) -> None:
@@ -1023,7 +1032,8 @@ class IsacLauncher(QWidget):
             painter.setPen(QColor('#111214'))
             painter.drawText(self.rect().adjusted(0,7,0,-40), Qt.AlignCenter, '2077')
             painter.setPen(QColor('#35EAF2'))
-            painter.drawText(self.rect().adjusted(0,25,0,0), Qt.AlignCenter, 'JS')
+            from shd_desktop.ui.cyber_icons import category_pixmap
+            painter.drawPixmap(12,24,category_pixmap('johnny','',42))
             return
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setBrush(QColor(20, 27, 33, 238))
@@ -1866,7 +1876,7 @@ def main() -> int:
     args = parser.parse_args()
     app = QApplication(sys.argv)
     app.setApplicationName("SHD Desktop")
-    app.setApplicationVersion("1.0.7")
+    app.setApplicationVersion("1.0.8")
     app.setWindowIcon(QIcon(str(ICON)))
     app.setFont(QFont("Microsoft YaHei UI", 10))
     app.setStyleSheet(STYLE)

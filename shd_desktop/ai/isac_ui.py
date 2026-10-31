@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from shd_desktop.ai.llm import LlmClient
 from shd_desktop.ai.llm_profiles import api_base
+from shd_desktop.ui.skin_surface import skin_icon
 from shd_desktop.ui.theme import HudHeader, hud_background, scaled_style, cyberpunk, paint_cyber_frame, title_style, assistant_name
 
 
@@ -71,7 +72,7 @@ class ChatWindow(QWidget):
         root.setSpacing(10)
         title_row = QHBoxLayout()
         logo = QLabel()
-        logo.setPixmap(QIcon(str(ICON_DIR / "fn-isac-gen-64.png")).pixmap(28, 28))
+        logo.setPixmap(skin_icon(ICON_DIR / "fn-isac-gen-64.png").pixmap(28, 28))
         self.logo = logo
         title_row.addWidget(logo)
         self.drag_label = ChatDragLabel(self)
@@ -147,12 +148,13 @@ class ChatWindow(QWidget):
             button.setStyleSheet('color:#111214;background:transparent;border:1px solid #706B08;padding:3px' if cyberpunk() else '')
         self.signal_label.setStyleSheet('color:#111214;font-size:10px;font-weight:700' if cyberpunk() else 'color:#85C8BF;font-size:10px;font-weight:700')
         if cyberpunk():
-            self.logo.setPixmap(QPixmap())
-            self.logo.setText('JS')
+            from shd_desktop.ui.cyber_icons import category_pixmap
+            self.logo.setText('')
+            self.logo.setPixmap(category_pixmap('johnny','',28))
             self.logo.setStyleSheet('color:#111214;font-size:17px;font-weight:900')
         else:
             self.logo.setText('')
-            self.logo.setPixmap(QIcon(str(ICON_DIR / 'fn-isac-gen-64.png')).pixmap(28,28))
+            self.logo.setPixmap(skin_icon(ICON_DIR / 'fn-isac-gen-64.png').pixmap(28,28))
         self.setWindowTitle('SHD Desktop · ' + assistant_name())
         self.drag_label.setText(assistant_name() if cyberpunk() else 'ISAC  //  终端对话')
         self.drag_label.setStyleSheet(title_style(18))

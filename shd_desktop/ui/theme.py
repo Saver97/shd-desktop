@@ -93,7 +93,10 @@ def apply_hud(app, values: dict) -> None:
     if getattr(app, "_shd_hud", None) == settings:
         return
     app._shd_hud = settings
-    app.setStyleSheet(scaled_style(STYLE))
+    from shd_desktop.ui.skin_surface import CHROME
+    app.setStyleSheet(scaled_style(STYLE) + (CHROME if cyberpunk() else ""))
+    from shd_desktop.ui.skin_surface import install
+    install(app)
     for widget in app.allWidgets():
         if hasattr(widget, "apply_hud"):
             widget.apply_hud()
@@ -107,6 +110,7 @@ def hud_section(title: str, icon_path: Path) -> QWidget:
     layout.setSpacing(8)
     icon = QLabel()
     icon.setFixedSize(25, 25)
+    icon.setProperty("_skin_icon_path", str(icon_path))
     icon.setPixmap(QPixmap(str(icon_path)).scaled(24, 24, Qt.KeepAspectRatio,
                                                  Qt.SmoothTransformation))
     layout.addWidget(icon)
