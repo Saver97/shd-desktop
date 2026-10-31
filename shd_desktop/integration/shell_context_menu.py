@@ -7,10 +7,11 @@ from pathlib import Path
 
 
 RESTORE_COMMAND = 0x7FFF
+DELETE_COMMAND = 0x7FFE
 
 
 def show_file_menu(paths: list[Path], owner_hwnd: int, x: int, y: int,
-                   *, allow_restore: bool = False) -> bool | None:
+                   *, allow_restore: bool = False) -> bool | str | None:
     """Show the native menu; return True for restore, False for a Shell command.
 
     Shell folders accept a multi-file selection only when every child has the
@@ -46,7 +47,8 @@ def show_file_menu(paths: list[Path], owner_hwnd: int, x: int, y: int,
         flags = shellcon.CMF_NORMAL | shellcon.CMF_CANRENAME
         if win32api.GetKeyState(win32con.VK_SHIFT) < 0:
             flags |= shellcon.CMF_EXTENDEDVERBS
-        context.QueryContextMenu(popup, 0, first_command, RESTORE_COMMAND - 1, flags)
+        context.QueryContextMenu(popup, 0, first_command, DELETE_COMMAND - 1, flags)
+        win32gui.AppendMenu(popup, win32con.MF_STRING, DELETE_COMMAND, "删除到回收站")
         if allow_restore:
             win32gui.AppendMenu(popup, win32con.MF_SEPARATOR, 0, "")
             win32gui.AppendMenu(popup, win32con.MF_STRING, RESTORE_COMMAND,
@@ -56,7 +58,11 @@ def show_file_menu(paths: list[Path], owner_hwnd: int, x: int, y: int,
             x, y, 0, owner_hwnd, None)
         if command == RESTORE_COMMAND:
             return True
-        if first_command <= command < RESTORE_COMMAND:
+        if command == DELETE_COMMAND:
+            return "delete"
+        if first_command <= command < DELETE_COMMAND:
+            if context.GetCommandString(command - first_command, shellcon.GCS_VERBA) in ("delete", b"delete"):
+                return "delete"
             # PyIContextMenu takes the eight CMINVOKECOMMANDINFO fields.
             context.InvokeCommand((0, owner_hwnd, command - first_command,
                                    None, None, win32con.SW_SHOWNORMAL, 0, 0))

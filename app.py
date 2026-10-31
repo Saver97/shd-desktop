@@ -285,6 +285,13 @@ class PanelSizeGrip(QSizeGrip):
 
 
 class FolderList(QListWidget):
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Delete:
+            self.panel.delete_items()
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
     def __init__(self, panel: "FolderPanel"):
         super().__init__(panel)
         self.panel = panel
@@ -740,7 +747,9 @@ class FolderPanel(QWidget):
         except Exception as exc:
             QMessageBox.warning(self, "Windows 右键菜单", str(exc))
             return
-        if restore:
+        if restore == "delete":
+            self.delete_items(selected)
+        elif restore:
             try:
                 for entry in selected:
                     self.groups.remove(self.config, entry)
@@ -754,6 +763,22 @@ class FolderPanel(QWidget):
                 self.group_changed_callback()
         elif restore is False:
             self._refresh_timer.start()
+
+    def delete_items(self, paths=None) -> None:
+        from shd_desktop.integration.recycle import recycle_items
+        paths = paths or [Path(item.data(Qt.UserRole)) for item in self.list.selectedItems()]
+        if not paths:
+            return
+        if QMessageBox.question(self, "删除到回收站", f"将选中的 {len(paths)} 个项目删除到回收站？\n快捷方式只删除快捷方式本身。",
+                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No) != QMessageBox.Yes:
+            return
+        errors = recycle_items(paths, int(self.winId()),
+                               self.groups if self.is_virtual else None, self.config)
+        self._refresh_timer.start()
+        if self.group_changed_callback:
+            self.group_changed_callback()
+        if errors:
+            QMessageBox.warning(self, "部分项目未删除", "\n".join(errors))
 
     def receive_drop(self, paths: list[Path], position: QPoint) -> bool:
         if self.is_virtual:
@@ -1817,7 +1842,7 @@ def main() -> int:
     args = parser.parse_args()
     app = QApplication(sys.argv)
     app.setApplicationName("SHD Desktop")
-    app.setApplicationVersion("1.0.4")
+    app.setApplicationVersion("1.0.5")
     app.setWindowIcon(QIcon(str(ICON)))
     app.setFont(QFont("Microsoft YaHei UI", 10))
     app.setStyleSheet(STYLE)
