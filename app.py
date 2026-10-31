@@ -951,6 +951,17 @@ class StatusPanel(QWidget):
     def apply_hud(self) -> None:
         self.header.setStyleSheet(title_style(16))
         self.content.setStyleSheet(scaled_style("color:#E8E6E3;font-size:12px"))
+        if cyberpunk():
+            # The painted title ends at y=40. Reserve that space in the
+            # layout too, so the first content line cannot enter its band.
+            self.header.setFixedHeight(28)
+            self.layout().setSpacing(10)
+            self.setMinimumHeight(round(190 * current_hud()["font_size"] / 12))
+        else:
+            self.header.setMinimumHeight(0)
+            self.header.setMaximumHeight(16777215)
+            self.layout().setSpacing(-1)
+            self.setMinimumHeight(130)
         self.refresh()
         self.update()
 
@@ -1873,10 +1884,11 @@ def main() -> int:
     parser.add_argument("--show-center", action="store_true", help="open the control center on launch")
     parser.add_argument("--new-note", action="store_true", help="create a desktop note")
     parser.add_argument("--restore-desktop-icons", action="store_true", help="restore grouped desktop icons and exit")
+    parser.add_argument("--organize-desktop", action="store_true", help="organize ungrouped desktop icons")
     args = parser.parse_args()
     app = QApplication(sys.argv)
     app.setApplicationName("SHD Desktop")
-    app.setApplicationVersion("1.0.8")
+    app.setApplicationVersion("1.0.9")
     app.setWindowIcon(QIcon(str(ICON)))
     app.setFont(QFont("Microsoft YaHei UI", 10))
     app.setStyleSheet(STYLE)
@@ -1899,7 +1911,7 @@ def main() -> int:
             result = app.exec()
             controller.events.close()
             return result
-    server = claim_or_forward(app, "note" if args.new_note else "center")
+    server = claim_or_forward(app, "organize" if args.organize_desktop else "note" if args.new_note else "center")
     if server is None:
         return 0
     if getattr(sys, "frozen", False):
@@ -1908,11 +1920,13 @@ def main() -> int:
         except OSError:
             pass
     controller = Controller(app, ConfigStore())
-    receive_requests(server, controller.open_center, controller.notes.new_note)
+    receive_requests(server, controller.open_center, controller.notes.new_note, controller.auto_organize)
     if args.show_center:
         controller.open_center()
     if args.new_note:
         controller.notes.new_note()
+    if args.organize_desktop:
+        QTimer.singleShot(0, controller.auto_organize)
     return app.exec()
 
 

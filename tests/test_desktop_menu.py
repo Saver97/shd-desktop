@@ -10,17 +10,27 @@ import shd_desktop.integration.desktop_menu as desktop_menu
 desktop_menu.MENU_KEY = rf"Software\SHDDesktop-MenuTest-{uuid.uuid4().hex}"
 try:
     assert not desktop_menu.is_enabled()
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, desktop_menu.MENU_KEY + "NewNote" + r"\command") as key:
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "legacy")
     desktop_menu.set_enabled(True)
+    try:
+        winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_menu.MENU_KEY + "NewNote").Close()
+    except FileNotFoundError:
+        pass
+    else:
+        raise AssertionError("Legacy top-level note entry remains")
     assert desktop_menu.is_enabled()
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_menu.MENU_KEY) as key:
-        assert winreg.QueryValueEx(key, "MUIVerb")[0] == "打开 SHD Desktop"
+        assert winreg.QueryValueEx(key, "MUIVerb")[0] == "SHD Desktop"
         assert winreg.QueryValueEx(key, "Position")[0] == "Top"
-    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_menu.MENU_KEY + r"\command") as key:
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_menu.MENU_KEY + r"\shell\01Center\command") as key:
         assert winreg.QueryValueEx(key, "")[0] == desktop_menu.menu_command()
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_menu.note_menu_key()) as key:
-        assert winreg.QueryValueEx(key, "MUIVerb")[0] == "新建 SHD 便签"
+        assert winreg.QueryValueEx(key, "MUIVerb")[0] == "新建便签"
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_menu.note_menu_key() + r"\command") as key:
         assert winreg.QueryValueEx(key, "")[0] == desktop_menu.note_menu_command()
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, desktop_menu.MENU_KEY + r"\shell\03Organize\command") as key:
+        assert winreg.QueryValueEx(key, "")[0].endswith("--organize-desktop")
     desktop_menu.set_enabled(False)
     assert not desktop_menu.is_enabled()
     for path in (desktop_menu.MENU_KEY, desktop_menu.note_menu_key()):

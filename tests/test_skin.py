@@ -32,6 +32,17 @@ with TemporaryDirectory() as tmp:
     assert ConfigStore(store.file.parent).data['skin'] == 'cyberpunk'
     assert '强尼' in c.chat.windowTitle()
     app.processEvents()
+    for size in (12,16):
+        c.apply_appearance({'opacity':74,'font_size':size,'icon_size':40}, 'cyberpunk')
+        for widget in c.widgets.values():
+            widget.resize(260,130)
+            widget.content.setText('唯有追赶过风的方向 Only By Chasing the Wind\n知更鸟 / HOYO-MiX / Chevy')
+            widget.show()
+            app.processEvents()
+            assert widget.content.y() >= 50, (widget.kind, widget.content.geometry())
+            assert widget.header.geometry().bottom() < widget.content.y()
+            widget.grab().save('tests/skin-status-' + widget.kind + '-' + str(size) + '.png')
+    c.apply_appearance({'opacity':74,'font_size':12,'icon_size':40}, 'cyberpunk')
     panel = next(iter(c.panels.values()))
     panel.grab().save('tests/skin-cyberpunk.png')
     c.center.show()

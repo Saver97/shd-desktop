@@ -1,71 +1,65 @@
-"""Per-user Windows desktop background context menu registration."""
-
-from __future__ import annotations
-
+"""Per-user cascading Windows desktop context menu."""
 import sys
 import winreg
-from pathlib import Path
-
 from shd_desktop.integration.startup import public_executable, startup_command
 from shd_desktop.resources import ASSETS
 
-
 MENU_KEY = r"Software\Classes\DesktopBackground\Shell\SHDDesktop"
+ACTIONS = (("01Center", "打开终端", "center"), ("02Note", "新建便签", "note"),
+           ("03Organize", "一键整理桌面", "organize"))
 
+def quick_command(action):
+    flag = {"center":"show-center", "note":"new-note", "organize":"organize-desktop"}[action]
+    return f"{startup_command()} --{flag}"
 
-def quick_command(action: str) -> str:
-    """The public EXE forwards to an existing process before extracting Qt."""
-    return f"{startup_command()} --{'new-note' if action == 'note' else 'show-center'}"
-
-
-def menu_command() -> str:
+def menu_command():
     return quick_command("center")
 
+def note_menu_key():
+    return MENU_KEY + r"\shell\02Note"
 
-def note_menu_key() -> str:
-    return MENU_KEY + "NewNote"
-
-
-def note_menu_command() -> str:
+def note_menu_command():
     return quick_command("note")
 
-
-def is_enabled() -> bool:
+def _remove(path):
     try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, MENU_KEY + r"\command") as key:
-            command, _ = winreg.QueryValueEx(key, "")
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, note_menu_key() + r"\command") as key:
-            note_command, _ = winreg.QueryValueEx(key, "")
-        return (command.casefold() == menu_command().casefold()
-                and note_command.casefold() == note_menu_command().casefold())
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, path, 0, winreg.KEY_READ | winreg.KEY_WRITE) as key:
+            children = []
+            for i in range(winreg.QueryInfoKey(key)[0]):
+                children.append(winreg.EnumKey(key, i))
+        for child in children:
+            _remove(path + "\\" + child)
+        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, path)
+    except FileNotFoundError:
+        pass
+
+def is_enabled():
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, MENU_KEY) as key:
+            if winreg.QueryValueEx(key, "SubCommands")[0] != "":
+                return False
+        for name, _, action in ACTIONS:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, MENU_KEY + "\\shell\\" + name + "\\command") as key:
+                if winreg.QueryValueEx(key, "")[0].casefold() != quick_command(action).casefold():
+                    return False
+        return True
     except FileNotFoundError:
         return False
 
-
-def set_enabled(enabled: bool) -> None:
-    if enabled:
-        icon = (f'"{public_executable()}"' if getattr(sys, "frozen", False)
-                else str(ASSETS / "app.ico"))
-        with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, MENU_KEY, 0,
-                                winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, "MUIVerb", 0, winreg.REG_SZ, "打开 SHD Desktop")
-            winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, icon)
-            winreg.SetValueEx(key, "Position", 0, winreg.REG_SZ, "Top")
-        with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, MENU_KEY + r"\command", 0,
-                                winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, "", 0, winreg.REG_SZ, menu_command())
-        with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, note_menu_key(), 0,
-                                winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, "MUIVerb", 0, winreg.REG_SZ, "新建 SHD 便签")
-            winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, icon)
-            winreg.SetValueEx(key, "Position", 0, winreg.REG_SZ, "Top")
-        with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, note_menu_key() + r"\command", 0,
-                                winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, "", 0, winreg.REG_SZ, note_menu_command())
-    else:
-        for path in (MENU_KEY + r"\command", MENU_KEY,
-                     note_menu_key() + r"\command", note_menu_key()):
-            try:
-                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, path)
-            except FileNotFoundError:
-                pass
+def set_enabled(enabled):
+    # Remove only the application's known old entries, never other shell menus.
+    _remove(MENU_KEY + "NewNote")
+    _remove(MENU_KEY)
+    if not enabled:
+        return
+    icon = f'"{public_executable()}"' if getattr(sys, "frozen", False) else str(ASSETS / "app.ico")
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, MENU_KEY) as key:
+        for name, value in (("MUIVerb","SHD Desktop"),("SubCommands",""),("Icon",icon),("Position","Top")):
+            winreg.SetValueEx(key,name,0,winreg.REG_SZ,value)
+    for name, title, action in ACTIONS:
+        path = MENU_KEY + "\\shell\\" + name
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, path) as key:
+            winreg.SetValueEx(key,"MUIVerb",0,winreg.REG_SZ,title)
+            winreg.SetValueEx(key,"Icon",0,winreg.REG_SZ,icon)
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, path + "\\command") as key:
+            winreg.SetValueEx(key,"",0,winreg.REG_SZ,quick_command(action))

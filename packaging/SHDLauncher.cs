@@ -108,13 +108,13 @@ internal static class SHDLauncher
     {
         string argument = args.Length == 0 ? "" : args[0];
         if (args.Length > 1 || (argument != "" && argument != "--show-center"
-            && argument != "--new-note" && argument != "--restore-desktop-icons"
+            && argument != "--organize-desktop" && argument != "--new-note" && argument != "--restore-desktop-icons"
             && argument != "--smoke" && argument != "--help" && argument != "--probe"))
             return 2;
-        string request = argument == "--new-note" ? "note" : "center";
+        string request = argument == "--organize-desktop" ? "organize" : argument == "--new-note" ? "note" : "center";
         if (argument == "--probe")
             return Forward("probe") ? 0 : 1;
-        if (argument == "" || argument == "--show-center" || argument == "--new-note")
+        if (argument == "" || argument == "--show-center" || argument == "--new-note" || argument == "--organize-desktop")
         {
             if (Forward(request))
                 return 0;

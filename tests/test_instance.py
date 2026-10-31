@@ -15,8 +15,8 @@ server = instance.claim_or_forward(app)
 assert server is not None
 opened = []
 instance.receive_requests(server, lambda: opened.append("center"),
-                          lambda: opened.append("note"))
-for request in ("center", "note"):
+                          lambda: opened.append("note"), lambda: opened.append("organize"))
+for count, request in enumerate(("center", "note", "organize"), 1):
     child = subprocess.Popen([sys.executable, "-c",
         "import sys; from shd_desktop.integration import instance; from PySide6.QtCore import QCoreApplication; "
         "app=QCoreApplication([]); instance.server_name=lambda:sys.argv[1]; "
@@ -25,12 +25,12 @@ for request in ("center", "note"):
     loop = QEventLoop()
     timer = QTimer()
     timer.setInterval(10)
-    timer.timeout.connect(lambda: loop.quit() if len(opened) >= (1 if request == "center" else 2) else None)
+    timer.timeout.connect(lambda: loop.quit() if len(opened) >= count else None)
     timer.start()
     QTimer.singleShot(3000, loop.quit)
     loop.exec()
     timer.stop()
     assert child.wait(timeout=3) == 0
-assert opened == ["center", "note"]
+assert opened == ["center", "note", "organize"]
 server.close()
 print("single-instance forwarding passed")

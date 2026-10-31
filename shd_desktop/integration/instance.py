@@ -39,7 +39,7 @@ def claim_or_forward(app, request: str = "center") -> QLocalServer | None:
     raise OSError(f"无法建立 SHD Desktop 单实例通道：{server.errorString()}")
 
 
-def receive_requests(server: QLocalServer, open_center, new_note=None) -> None:
+def receive_requests(server: QLocalServer, open_center, new_note=None, organize=None) -> None:
     def connected():
         while server.hasPendingConnections():
             socket = server.nextPendingConnection()
@@ -50,6 +50,8 @@ def receive_requests(server: QLocalServer, open_center, new_note=None) -> None:
                     open_center()
                 elif request == b"note" and new_note is not None:
                     new_note()
+                elif request == b"organize" and organize is not None:
+                    organize()
                 current.disconnectFromServer()
                 current.deleteLater()
 
