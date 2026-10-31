@@ -32,7 +32,7 @@ with TemporaryDirectory() as temp:
         "fully_visible_rows": sum(view.viewport().rect().contains(view.visualItemRect(view.item(i)))
                                   for i in range(view.count())),
     }
-    assert metrics["list_viewport_height"] >= center.height() * .70, metrics
+    assert metrics["list_viewport_height"] >= (center.height() - center._themed_titlebar.height()) * .70, metrics
     assert metrics["fully_visible_rows"] >= 12, metrics
     assert not pane.editor.isVisible()
     assert not any(button.isEnabled() for button in pane.action_buttons)
@@ -82,7 +82,7 @@ with TemporaryDirectory() as temp:
     center.resize(720, 580)
     apply_hud(app, {**HUD_DEFAULTS, "font_size": 16})
     QTest.qWait(40)
-    assert view.viewport().height() >= center.height() * .60, (center.height(), view.viewport().height())
+    assert view.viewport().height() >= (center.height() - center._themed_titlebar.height()) * .60, (center.height(), view.viewport().height())
     assert view.visualItemRect(view.item(0)).height() >= 32
     assert center.scene_combo.isVisible()
     assert pane.add_button.isVisible()

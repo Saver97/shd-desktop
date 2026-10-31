@@ -305,6 +305,8 @@ class LlmSettingsWindow(QMainWindow):
         self.resize(880, 660)
         self.setMinimumSize(760, 590)
         self.setMenuWidget(HudHeader("ISAC  /  MODEL ROUTING", "模型连接与配置档", "CONFIG  /  02"))
+        from shd_desktop.ui.window_chrome import install_titlebar
+        install_titlebar(self)
         body = QWidget()
         root = QHBoxLayout(body)
         left = QVBoxLayout()

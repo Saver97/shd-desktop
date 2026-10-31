@@ -623,6 +623,8 @@ class ControlCenter(QMainWindow):
         self.setObjectName("ControlCenter")
         self.resize(840, 670)
         self.setMinimumSize(720, 580)
+        from shd_desktop.ui.window_chrome import install_titlebar
+        install_titlebar(self)
         toolbar = QToolBar("快捷入口")
         toolbar.setObjectName("CenterToolbar")
         toolbar.setMovable(False)
