@@ -6,7 +6,7 @@
 
 ## 下载与启动
 
-[GitHub Releases](https://github.com/Saver97/shd-desktop/releases) 提供已公开发布的单文件 EXE。截至 2026-11-01，公开附件仍为 **1.0.4**；本 README 中的双皮肤、自定义标题栏等新功能对应 **1.0.11 源码及本地构建**，尚未上传新版 Release 附件。可按下方步骤从源码运行或构建。
+从 [1.0.11 Release](https://github.com/Saver97/shd-desktop/releases/tag/v1.0.11) 下载 **SHDDesktop-1.0.11.exe**，包含双皮肤、自定义标题栏和桌面右键子菜单。也可按下方步骤从源码运行或构建。
 
 单文件版放在固定目录后双击运行，无需安装 Python；首次启动会在当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime` 缓存运行组件。
 
