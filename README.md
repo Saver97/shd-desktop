@@ -4,7 +4,7 @@
 
 ## 下载与启动
 
-从 [最新 Release](https://github.com/Saver97/shd-desktop/releases/latest) 下载 `SHDDesktop-1.0.9.exe`，放在固定目录后双击运行。单文件版无需安装 Python；首次启动会在当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime` 缓存运行组件。
+从 [最新 Release](https://github.com/Saver97/shd-desktop/releases/latest) 下载 `SHDDesktop-1.0.10.exe`，放在固定目录后双击运行。单文件版无需安装 Python；首次启动会在当前用户的 `%LOCALAPPDATA%\SHDDesktop\Runtime` 缓存运行组件。
 
 升级时先从托盘选择“退出 SHD Desktop”，再启动新版本，让已整理的桌面图标正常恢复。桌面空白处右键可打开程序或新建便签；Windows 11 可能需要先点“显示更多选项”。
 
@@ -32,7 +32,7 @@
 若程序无法正常打开，可在 PowerShell 中运行：
 
 ```powershell
-.\SHDDesktop-1.0.9.exe --restore-desktop-icons
+.\SHDDesktop-1.0.10.exe --restore-desktop-icons
 ```
 
 详细改动见 [发布记录](RELEASE_NOTES.md)。
@@ -75,7 +75,7 @@ python -m venv .venv-release
 .\build.ps1
 ```
 
-构建结果位于 `release-candidate/1.0.9`。GitHub Release 的附件仅提供 EXE；当前版本的 SHA256 见 [封版基准](docs/design/封版基准.md)。
+构建结果位于 `release-candidate/1.0.10`。GitHub Release 的附件仅提供 EXE；当前版本的 SHA256 见 [封版基准](docs/design/封版基准.md)。
 
 ## 使用说明
 
